@@ -2,10 +2,10 @@
 
 ##                          nickname: fakeymacs config
 ##
-## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20161104_01
+## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20161114_01
 ##
 
-# このスクリプトは、Keyhac for Windows ver 1.70 以降で動作します。
+# このスクリプトは、Keyhac for Windows ver 1.75 以降で動作します。
 #   https://sites.google.com/site/craftware/keyhac-ja
 # スクリプトですので、使いやすいようにカスタマイズしてご利用ください。
 #
@@ -1008,21 +1008,18 @@ def configure(keymap):
         ## emacs日本語入力モード の切り替え
         ##################################################
 
-        def updateKeymap():
-            keymap._updateKeymap(keymap.getWindow())
-
         def enable_emacs_ime_mode(update=True, toggle=False):
             fakeymacs.ei_last_window = keymap.getWindow()
             fakeymacs.ei_last_func = None
             ei_popBalloon(toggle)
             if update:
-                updateKeymap()
+                keymap.updateKeymap()
 
         def disable_emacs_ime_mode(update=True, toggle=False):
             fakeymacs.ei_last_window = None
             ei_popBalloon(toggle)
             if update:
-                updateKeymap()
+                keymap.updateKeymap()
 
         def toggle_emacs_ime_mode():
             if fakeymacs.ei_last_window:
@@ -1090,7 +1087,7 @@ def configure(keymap):
             if fakeymacs.ei_last_window:
                 disable_emacs_ime_mode()
             else:
-                updateKeymap()
+                keymap.updateKeymap()
 
             fakeymacs.ei_hook_mouseup(x, y, vk)
             return False
