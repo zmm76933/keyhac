@@ -2,7 +2,7 @@
 
 ##                          nickname: fakeymacs config
 ##
-## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20161114_01
+## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20161120_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.75 以降で動作します。
@@ -118,9 +118,9 @@ import sys
 import os.path
 import re
 
+import keyhac_keymap
+import keyhac_hook
 from keyhac import *
-from keyhac_keymap import *
-from keyhac_hook import *
 
 def configure(keymap):
 
@@ -244,7 +244,19 @@ def configure(keymap):
 
     fakeymacs = Fakeymacs()
 
+    fakeymacs.last_window = None
+
     def is_emacs_target(window):
+        if window != fakeymacs.last_window:
+            if window.getProcessName() == "EXCEL.EXE": # Microsoft Excel
+                # クリップボードの監視用のフックを無効にする
+                keymap.clipboard_history.enableHook(False)
+            else:
+                # クリップボードの監視用のフックを有効にする
+                keymap.clipboard_history.enableHook(True)
+
+            fakeymacs.last_window = window
+
         if is_list_window(window):
             return False
 
@@ -290,7 +302,7 @@ def configure(keymap):
 
     # Ctl-xプレフィックスキーを構成するキーの仮想キーコードを設定する
     if ctl_x_prefix_key:
-        keyCondition = KeyCondition.fromString(ctl_x_prefix_key)
+        keyCondition = keyhac_keymap.KeyCondition.fromString(ctl_x_prefix_key)
 
         if keyCondition.mod == MODKEY_CTRL:
             if side_of_ctrl_key == "L":
@@ -1090,12 +1102,11 @@ def configure(keymap):
                 keymap.updateKeymap()
 
             fakeymacs.ei_hook_mouseup(x, y, vk)
-            return False
 
         # マウスのボタンが離されたときに呼び出されるフック関数を設定する
         keymap.enableHook(True) # 設定のリロード時にフックの設定がネストしないようにコール
-        fakeymacs.ei_hook_mouseup = hook.mouseup
-        hook.mouseup = ei_hook_mouseup
+        fakeymacs.ei_hook_mouseup = keyhac_hook.hook.mouseup
+        keyhac_hook.hook.mouseup = ei_hook_mouseup
 
         ##################################################
         ## キーバインド（emacs日本語入力モード用）
