@@ -203,7 +203,7 @@ def configure(keymap):
 
     # スクロールに使うキーの組み合わせ（Up、Down の順）を指定する
     # scroll_key = None # PageUp、PageDownキーのみを利用する
-    scroll_key = ["C-z", "C-v"]
+    scroll_key = ["C-z", "M-v", "C-v"]
 
     # 表示しているウインドウの中で、一番最近までフォーカスがあったウインドウに移動するキーを指定する
     other_window_key = "A-o"
@@ -984,7 +984,8 @@ def configure(keymap):
     ## 「スクロール」のキー設定（上書きされないように最後に設定する）
     if scroll_key:
         define_key(keymap_emacs, scroll_key[0], reset_search(reset_undo(reset_counter(mark(scroll_up)))))
-        define_key(keymap_emacs, scroll_key[1], reset_search(reset_undo(reset_counter(mark(scroll_down)))))
+        define_key(keymap_emacs, scroll_key[1], reset_search(reset_undo(reset_counter(mark(scroll_up)))))
+        define_key(keymap_emacs, scroll_key[2], reset_search(reset_undo(reset_counter(mark(scroll_down)))))
 
     ## 「カット」のキー設定（上書きされないように最後に設定する）
     if ctl_x_prefix_key != "C-x":
@@ -1175,7 +1176,8 @@ def configure(keymap):
         ## 「スクロール」のキー設定（上書きされないように最後に設定する）
         if scroll_key:
             define_key(keymap_ei, scroll_key[0].replace("M-", "A-"), ei_record_func(scroll_up))
-            define_key(keymap_ei, scroll_key[1].replace("M-", "A-"), ei_record_func(scroll_down))
+            define_key(keymap_ei, scroll_key[1].replace("M-", "A-"), ei_record_func(scroll_up))
+            define_key(keymap_ei, scroll_key[2].replace("M-", "A-"), ei_record_func(scroll_down))
 
         ## emacs日本語入力モードを切り替える（トグルする）
         define_key(keymap_emacs, toggle_emacs_ime_mode_key, toggle_emacs_ime_mode)
@@ -1423,7 +1425,8 @@ def configure(keymap):
 
     if scroll_key:
         define_key(keymap_lw, scroll_key[0].replace("M-", "A-"), scroll_up)
-        define_key(keymap_lw, scroll_key[1].replace("M-", "A-"), scroll_down)
+        define_key(keymap_lw, scroll_key[1].replace("M-", "A-"), scroll_up)
+        define_key(keymap_lw, scroll_key[2].replace("M-", "A-"), scroll_down)
 
     ## 「カット / コピー / 削除 / アンドゥ」のキー設定
     define_key(keymap_lw, "C-h", delete_backward_char)
