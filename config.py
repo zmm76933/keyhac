@@ -1,8 +1,8 @@
 ﻿# -*- mode: python; coding: utf-8-with-signature-dos -*-
 
-##                          nickname: fakeymacs config
+##                               nickname: fakeymacs
 ##
-## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20161120_01
+## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20180118_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.75 以降で動作します。
@@ -17,6 +17,8 @@
 # ＜共通の仕様＞
 # ・not_emacs_target 変数と ime_target 変数で、emacsキーバインドや IME の切り替えキーバインド
 #   の対象とするアプリケーションソフトを指定できる。
+# ・not_clipboard_target 変数で、clipboard 監視の対象外とするアプリケーションソフトを指定
+#   できる。
 # ・日本語と英語のどちらのキーボードを利用するかを is_japanese_keyboard 変数で指定できる。
 # ・左右どちらの Ctrlキーを使うかを side_of_ctrl_key 変数で指定できる。
 # ・左右どちらの Altキーを使うかを side_of_alt_key 変数で指定できる。
@@ -85,8 +87,8 @@
 #   記録する。このため、キーボードマクロ記録時や再生時、IME の状態に留意した利用が必要。
 #
 # ＜全てのアプリケーションソフトで共通の動き＞
-# ・other_window_key 変数に設定したキーにより、表示しているウインドウの中で、一番最近
-#   までフォーカスがあったウインドウに移動する。NTEmacs の機能やランチャーの機能から
+# ・other_window_key 変数に設定したキーにより、表示しているウィンドウの中で、一番最近
+#   までフォーカスがあったウィンドウに移動する。NTEmacs の機能やランチャーの機能から
 #   Windows アプリケーションソフトを起動した際に、起動元のアプリケーションソフトに戻る
 #   のに便利。この機能は Ctl-x o にも割り当てているが、こちらは emacs のキーバインドを
 #   適用したアプリケーションソフトのみで有効となる。
@@ -100,9 +102,7 @@
 #   （全てのアプリケーションソフトで利用可能。操作方法は、クリップボードリストと同じ。）
 # ・クリップボードリストやランチャーリストのリストボックス内では、基本、Altキーを
 #   Ctrlキーと同じキーとして扱っている。（C-v と A-v の置き換えのみ行っていない。）
-# ・window_switching_key 変数に設定したキーにより、アクティブウィンドウの切り替えが行われ
-#   る。アクティブウィンドウを切り替える際、切り替わったウィンドウが最小化されている場合は、
-#   ウィンドウのリストアも併せて行われる。
+# ・window_switching_key 変数に設定したキーにより、アクティブウィンドウの切り替えが行われる。
 # ・マルチディスプレイを利用している際に、window_movement_key 変数に設定したキーにより、
 #   アクティブウィンドウのディスプレイ間の移動が行われる。
 # ・window_minimize_key 変数に設定したキーにより、ウィンドウの最小化、リストアが行われる。
@@ -112,6 +112,8 @@
 #     ・http://pc-karuma.net/windows-10-virtual-desktop-show-all-window-app/
 #     仮想デスクトップ切替時のアニメーションを止める方法は以下を参照ください。
 #     ・http://www.jw7.org/2015/11/03/windows10_virtualdesktop_animation_off/ ）
+# ・word_register_key 変数に設定したキーにより、IME の「単語登録」プログラムの起動が
+#   行われる。
 
 import time
 import sys
@@ -119,51 +121,62 @@ import os.path
 import re
 
 import keyhac_keymap
-import keyhac_hook
 from keyhac import *
 
 def configure(keymap):
 
     ####################################################################################################
-    ## カスタマイズ用の設定
+    ## カスタマイズの設定
     ####################################################################################################
 
-    # emacs のキーバインドに"したくない"アプリケーションソフトを指定する
-    # （Keyhac のメニューから「内部ログ」を ON にすると processname や classname を確認することができます。）
+    # emacs のキーバインドに“したくない”アプリケーションソフトを指定する
+    # （Keyhac のメニューから「内部ログ」を ON にすると processname や classname を確認することができます）
     not_emacs_target = ["cmd.exe",            # cmd
-                    "bash.exe",           # bash
-                    "mintty.exe",         # mintty
-                    "emacs.exe",          # Emacs
-                    "emacs-w32.exe",      # Emacs
-                    "gvim.exe",           # GVim
-                    "ConEmu64.exe",       # ConEmu
-                    "sublime_text.exe",   # Sublime Text
-                    # "eclipse.exe",        # Eclipse
-                    # "firefox.exe",        # firefox
-                    "xyzzy.exe",          # xyzzy
-                    "VirtualBox.exe",     # VirtualBox
-                    "XWin.exe",           # Cygwin/X
-                    "Xming.exe",          # Xming
-                    "putty.exe",          # PuTTY
-                    "ttermpro.exe",       # TeraTerm
-                    "MobaXterm.exe",      # MobaXterm
-                    "TurboVNC.exe",       # TurboVNC
-                    "vncviewer.exe"]      # UltraVNC
+                        "bash.exe",           # WSL
+                        "ubuntu.exe",         # WSL
+                        "SLES-12.exe",        # WSL
+                        "openSUSE-42.exe",    # WSL
+                        "mintty.exe",         # mintty
+                        "Cmder.exe",          # Cmder
+                        "ConEmu.exe",         # ConEmu
+                        "ConEmu64.exe",       # ConEmu
+                        "emacs.exe",          # Emacs
+                        "emacs-X11.exe",      # Emacs
+                        "emacs-w32.exe",      # Emacs
+                        "gvim.exe",           # GVim
+                        "sublime_text.exe",   # Sublime Text
+                        "xyzzy.exe",          # xyzzy
+                        "VirtualBox.exe",     # VirtualBox
+                        "XWin.exe",           # Cygwin/X
+                        "XWin_MobaX.exe",     # MobaXterm/X
+                        "Xming.exe",          # Xming
+                        "vcxsrv.exe",         # VcXsrv
+                        "putty.exe",          # PuTTY
+                        "ttermpro.exe",       # TeraTerm
+                        "MobaXterm.exe",      # MobaXterm
+                        "TurboVNC.exe",       # TurboVNC
+                        "vncviewer.exe"]      # UltraVNC
 
-    # IME の切り替えのみをしたいアプリケーションソフトを指定する
-    # （指定できるアプリケーションソフトは、not_emacs_target で（除外）指定したものからのみとなります。）
+    # IME の切り替え“のみをしたい”アプリケーションソフトを指定する
+    # （指定できるアプリケーションソフトは、not_emacs_target で（除外）指定したものからのみとなります）
     ime_target   = ["cmd.exe",            # cmd
-                    "bash.exe"            # bash
+                    "bash.exe",           # WSL
+                    "ubuntu.exe",         # WSL
+                    "SLES-12.exe",        # WSL
+                    "openSUSE-42.exe",    # WSL
                     "mintty.exe",         # mintty
-                    "gvim.exe",           # GVim
+                    "Cmder.exe",          # Cmder
+                    "ConEmu.exe",         # ConEmu
                     "ConEmu64.exe",       # ConEmu
+                    "gvim.exe",           # GVim
                     "sublime_text.exe",   # Sublime Text
-                    # "eclipse.exe",        # Eclipse
-                    # "firefox.exe",        # firefox
                     "xyzzy.exe",          # xyzzy
                     "putty.exe",          # PuTTY
                     "ttermpro.exe",       # TeraTerm
                     "MobaXterm.exe"]      # MobaXterm
+
+    # clipboard 監視の対象外とするアプリケーションソフトを指定する
+    not_clipboard_target = ["EXCEL.EXE"]          # Excel
 
     # 日本語キーボードかどうかを指定する（True: 日本語キーボード、False: 英語キーボード）
     is_japanese_keyboard = False
@@ -174,10 +187,15 @@ def configure(keymap):
     # 左右どちらの Altキーを使うかを指定する（"L": 左、"R": 右）
     side_of_alt_key = "L"
 
+    # リージョンのコピー後にリージョンを解除する機能を使うかどうかを指定する（True: 使う、False: 使わない）
+    # （リージョンを解除する機能は、リージョンをキーボードで指定した場合のみ利用可能です）
+    use_region_reset = True
+
     # emacs日本語入力モードを使うかどうかを指定する（True: 使う、False: 使わない）
     use_emacs_ime_mode = False
 
     # emacs日本語入力モードを切り替える（トグルする）キーを指定する
+    toggle_emacs_ime_mode_key = None
     # toggle_emacs_ime_mode_key = "C-t"
 
     # emacs日本語入力モードが有効なときに表示するバルーンメッセージを指定する
@@ -205,7 +223,7 @@ def configure(keymap):
     # scroll_key = None # PageUp、PageDownキーのみを利用する
     scroll_key = ["C-z", "M-v", "C-v"]
 
-    # 表示しているウインドウの中で、一番最近までフォーカスがあったウインドウに移動するキーを指定する
+    # 表示しているウィンドウの中で、一番最近までフォーカスがあったウィンドウに移動するキーを指定する
     other_window_key = "A-o"
 
     # クリップボードリストを起動するキーを指定する
@@ -215,23 +233,47 @@ def configure(keymap):
     lancherList_key = "A-l"
 
     # アクティブウィンドウを切り替えるキーの組み合わせ（前、後 の順）を指定する（複数指定可）
-    window_switching_key = [["A-p", "A-n"], ["A-Up", "A-Down"]]
+    # （内部で A-Tab による切り替えを行っているため、設定するキーは Altキーとの組み合わせとしてください）
+    # （切り替え画面が起動した後は、A-p、A-n でウィンドウを切り替えられるように設定している他、
+    #   Alt + 矢印キーでもウィンドウを切り替えることができます。また、A-g もしくは A-Esc で切り替え画面の
+    #   終了（キャンセル）となり、Altキーを離すか A-Enter で切り替えるウィンドウの確定となります。）
+    # window_switching_key = None # A-S-Tab、A-Tabキーのみを利用する
+    window_switching_key = [["A-p", "A-n"]]
 
     # アクティブウィンドウをディスプレイ間で移動するキーの組み合わせ（前、後 の順）を指定する（複数指定可）
-    # （other_window_key に割り当てている A-o との連係した利用を想定し、A-C-o を割り当てています。）
+    # （other_window_key に割り当てている A-o との連係した利用を想定し、A-S-o も割り当てています）
+    # （デフォルトキーは、["W-S-Left", "W-S-Right"]）
     # window_movement_key = None # Single display
-    window_movement_key = [[None, "A-C-o"], ["A-Left", "A-Right"]] # Multi-display
+    window_movement_key = [["A-S-b", "A-S-f"], ["A-S-Left", "A-S-Right"], [None, "A-S-o"]] # Multi-display
 
     # ウィンドウを最小化、リストアするキーの組み合わせ（リストア、最小化 の順）を指定する（複数指定可）
+    # window_minimize_key = None
     window_minimize_key = [["A-r", "A-m"]]
 
     # 仮想デスクトップを切り替えるキーの組み合わせ（前、後 の順）を指定する（複数指定可）
+    # （デフォルトキーは、["W-C-Left", "W-C-Right"]）
     # desktop_switching_key = None # for Windows 7 or 8.1
-    desktop_switching_key = [["A-C-p", "A-C-n"], ["A-C-Left", "A-C-Right"]] # for Windows 10
+    desktop_switching_key = [["A-C-b", "A-C-f"], ["A-C-Left", "A-C-Right"]] # for Windows 10
+
+    # IME の「単語登録」プログラムを起動するキーを指定する
+    word_register_key = None
+    # word_register_key = "C-CloseBracket"
+
+    # IME の「単語登録」プログラムとそのパラメータを指定する（for Google日本語入力）
+    # word_register_name = r"C:\Program Files\Google\Google Japanese Input\GoogleIMEJaTool.exe"
+    # word_register_name = r"C:\Program Files (x86)\Google\Google Japanese Input\GoogleIMEJaTool.exe"
+    # word_register_param = "--mode=word_register_dialog"
+
+    # IME の「単語登録」プログラムとそのパラメータを指定する（for MS-IME）
+    # word_register_name = r"C:\Windows\System32\IME\IMEJP\IMJPDCT.EXE"
+    # word_register_param = ""
 
     # shell_command 関数で起動するアプリケーションソフトを指定する
-    # （パスが通っていない場所にあるコマンドは、絶対パスで指定してください。）
+    # （パスが通っていない場所にあるコマンドは、絶対パスで指定してください）
     command_name = r"cmd.exe"
+
+    # コマンドのリピート回数の最大値を指定する
+    repeat_max = 1024
 
 
     ####################################################################################################
@@ -248,7 +290,7 @@ def configure(keymap):
 
     def is_emacs_target(window):
         if window != fakeymacs.last_window:
-            if window.getProcessName() == "EXCEL.EXE": # Microsoft Excel
+            if window.getProcessName() in not_clipboard_target:
                 # クリップボードの監視用のフックを無効にする
                 keymap.clipboard_history.enableHook(False)
             else:
@@ -256,6 +298,9 @@ def configure(keymap):
                 keymap.clipboard_history.enableHook(True)
 
             fakeymacs.last_window = window
+
+        if is_task_switching_window(window):
+            return False
 
         if is_list_window(window):
             return False
@@ -281,6 +326,9 @@ def configure(keymap):
 
     # mark がセットされると True になる
     fakeymacs.is_marked = False
+
+    # リージョンを拡張する際に、順方向に拡張すると True、逆方向に拡張すると False になる
+    fakeymacs.forward_direction = None
 
     # 検索が開始されると True になる
     fakeymacs.is_searching = False
@@ -309,6 +357,7 @@ def configure(keymap):
                 ctl_x_prefix_vkey = [VK_LCONTROL, keyCondition.vk]
             else:
                 ctl_x_prefix_vkey = [VK_RCONTROL, keyCondition.vk]
+
         elif keyCondition.mod == MODKEY_ALT:
             if side_of_alt_key == "L":
                 ctl_x_prefix_vkey = [VK_LMENU, keyCondition.vk]
@@ -413,30 +462,42 @@ def configure(keymap):
         self_insert_command("Delete")()
 
     def backward_kill_word(repeat=1):
+        reset_region()
         fakeymacs.is_marked = True
+
         def move_beginning_of_region():
             for i in range(repeat):
                 backward_word()
-        mark(move_beginning_of_region)()
+
+        mark(move_beginning_of_region, False)()
         delay()
         kill_region()
 
     def kill_word(repeat=1):
+        reset_region()
         fakeymacs.is_marked = True
+
         def move_end_of_region():
             for i in range(repeat):
                 forward_word()
-        mark(move_end_of_region)()
+
+        mark(move_end_of_region, True)()
         delay()
         kill_region()
 
     def kill_line(repeat=1):
+        reset_region()
         fakeymacs.is_marked = True
+
         if repeat == 1:
-            mark(move_end_of_line)()
+            mark(move_end_of_line, True)()
             delay()
-            if checkWindow("Hidemaru.exe$", "HM32CLIENT$"): # Hidemaru Editor
-                self_insert_command("C-x")()
+
+            if checkWindow("cmd.exe$|powershell.exe$", "ConsoleWindowClass$"): # Cmd or PowerShell
+                kill_region()
+
+            elif checkWindow("Hidemaru.exe$", "HM32CLIENT$"): # Hidemaru Editor
+                kill_region()
                 delay()
                 if getClipboardText() == "":
                     self_insert_command("Delete")()
@@ -453,19 +514,34 @@ def configure(keymap):
                         next_line()
                     move_end_of_line()
                     forward_char()
-            mark(move_end_of_region)()
+
+            mark(move_end_of_region, True)()
             delay()
             kill_region()
 
     def kill_region():
-        self_insert_command("C-x")()
+        # コマンドプロンプトには Cut に対応するショートカットがない。その対策。
+        if checkWindow("cmd.exe$", "ConsoleWindowClass$"): # Cmd
+            self_insert_command("C-c")()
+            delay()
+
+            if fakeymacs.is_marked and fakeymacs.forward_direction is not None:
+                if fakeymacs.forward_direction:
+                    key = "Delete"
+                else:
+                    key = "Back"
+
+                for i in range(len(getClipboardText())):
+                    self_insert_command(key)()
+        else:
+            self_insert_command("C-x")()
+
+    def copy():
+        self_insert_command("C-c")()
 
     def kill_ring_save():
-        self_insert_command("C-c")()
-        if (checkWindow("sakura.exe$", "EditorClient$|SakuraView166$") or # Sakura Editor
-            checkWindow("Code.exe$", "Chrome_WidgetWin_1$")):             # Visual Studio Code
-            # 選択されているリージョンのハイライトを解除するために Esc を発行する
-            self_insert_command("Esc")()
+        copy()
+        reset_region()
 
     def yank():
         self_insert_command("C-v")()
@@ -482,16 +558,31 @@ def configure(keymap):
 
     def set_mark_command():
         if fakeymacs.is_marked:
+            reset_region()
             fakeymacs.is_marked = False
+            fakeymacs.forward_direction = None
         else:
             fakeymacs.is_marked = True
 
     def mark_whole_buffer():
-        if checkWindow("EXCEL.EXE$", "EXCEL"): # Microsoft Excel
-            # Excel のセルの中でも機能するようにする対策
+        if checkWindow("cmd.exe$", "ConsoleWindowClass$"): # Cmd
+            # "Home", "C-a" では上手く動かない場合がある
+            self_insert_command("Home", "S-End")()
+            fakeymacs.forward_direction = True # 逆の設定にする
+
+        elif checkWindow("powershell.exe$", "ConsoleWindowClass$"): # PowerShell
+            self_insert_command("End", "S-Home")()
+            fakeymacs.forward_direction = False
+
+        elif (checkWindow("EXCEL.EXE$", "EXCEL") or # Microsoft Excel
+              checkWindow(None, "Edit$")):          # NotePad 等
             self_insert_command("C-End", "C-S-Home")()
+            fakeymacs.forward_direction = False
         else:
             self_insert_command("C-Home", "C-a")()
+            fakeymacs.forward_direction = False
+
+        fakeymacs.is_marked = True
 
     def mark_page():
         mark_whole_buffer()
@@ -500,7 +591,7 @@ def configure(keymap):
         self_insert_command("Enter", "Up", "End")()
 
     ##################################################
-    ## バッファ / ウインドウ操作
+    ## バッファ / ウィンドウ操作
     ##################################################
 
     def kill_buffer():
@@ -521,17 +612,20 @@ def configure(keymap):
     ##################################################
 
     def isearch(direction):
-        if fakeymacs.is_searching:
-            if checkWindow("EXCEL.EXE$", None): # Microsoft Excel
-                if checkWindow(None, "EDTBX$"): # 検索ウィンドウ
-                    self_insert_command({"backward":"A-S-f", "forward":"A-f"}[direction])()
-                else:
-                    self_insert_command("C-f")()
-            else:
-                self_insert_command({"backward":"S-F3", "forward":"F3"}[direction])()
+        if checkWindow("powershell.exe$", "ConsoleWindowClass$"): # PowerShell
+            self_insert_command({"backward":"C-r", "forward":"C-s"}[direction])()
         else:
-            self_insert_command("C-f")()
-            fakeymacs.is_searching = True
+            if fakeymacs.is_searching:
+                if checkWindow("EXCEL.EXE$", None): # Microsoft Excel
+                    if checkWindow(None, "EDTBX$"): # 検索ウィンドウ
+                        self_insert_command({"backward":"A-S-f", "forward":"A-f"}[direction])()
+                    else:
+                        self_insert_command("C-f")()
+                else:
+                    self_insert_command({"backward":"S-F3", "forward":"F3"}[direction])()
+            else:
+                self_insert_command("C-f")()
+                fakeymacs.is_searching = True
 
     def isearch_backward():
         isearch("backward")
@@ -596,17 +690,24 @@ def configure(keymap):
         self_insert_command("Tab")()
 
     def keyboard_quit():
+        reset_region()
+
         # Microsoft Excel または Evernote 以外の場合、Esc を発行する
         if not (checkWindow("EXCEL.EXE$", "EXCEL") or checkWindow("Evernote.exe$", "WebViewHost$")):
             self_insert_command("Esc")()
+
         keymap.command_RecordStop()
+
         if fakeymacs.is_undo_mode:
             fakeymacs.is_undo_mode = False
         else:
             fakeymacs.is_undo_mode = True
 
     def kill_emacs():
-        self_insert_command("A-F4")()
+        # Excel のファイルを開いた直後一回目、kill_emacs が正常に動作しない。その対策。
+        self_insert_command("D-Alt", "F4")()
+        delay(0.1)
+        self_insert_command("U-Alt")()
 
     def universal_argument():
         if fakeymacs.is_universal_argument:
@@ -656,7 +757,7 @@ def configure(keymap):
             vkeys.remove(vkey)
         return vkeys
 
-    def addSideModifier(key):
+    def addSideOfModifierKey(key):
         key = key.replace("C-", side_of_ctrl_key + "C-")
         key = key.replace("A-", side_of_alt_key + "A-")
         return key
@@ -670,6 +771,7 @@ def configure(keymap):
                     keys_lists[0][0] = ctl_x_prefix_key
                 else:
                     keys_lists = []
+
             elif keys_lists[0][0].startswith("M-"):
                 key = re.sub("^M-", "", keys_lists[0][0])
                 keys_lists[0][0] = "A-" + key
@@ -678,7 +780,7 @@ def configure(keymap):
                     keys_lists.append(["Esc", key])
 
             for keys_list in keys_lists:
-                keys_list[0] = addSideModifier(keys_list[0])
+                keys_list[0] = addSideOfModifierKey(keys_list[0])
         else:
             keys_lists = []
 
@@ -692,7 +794,7 @@ def configure(keymap):
                 keymap[keys_list[0]][keys_list[1]] = command
 
     def self_insert_command(*keys):
-        return keymap.InputKeyCommand(*list(map(addSideModifier, keys)))
+        return keymap.InputKeyCommand(*list(map(addSideOfModifierKey, keys)))
 
     if use_emacs_ime_mode:
         def self_insert_command2(*keys):
@@ -720,7 +822,38 @@ def configure(keymap):
             digit_argument(number)
         return _func
 
-    def mark(func):
+    def reset_region():
+        if use_region_reset and fakeymacs.is_marked and fakeymacs.forward_direction is not None:
+
+            if (checkWindow("sakura.exe$", "EditorClient$|SakuraView166$") or # Sakura Editor
+                checkWindow("Code.exe$", "Chrome_WidgetWin_1$") or            # Visual Studio Code
+                checkWindow("Hidemaru.exe$", "HM32CLIENT$")):                 # Hidemaru Editor
+                # 選択されているリージョンのハイライトを解除するために Esc キーを発行する
+                self_insert_command("Esc")()
+
+            elif checkWindow("cmd.exe$", "ConsoleWindowClass$"): # Cmd
+                # 選択されているリージョンのハイライトを解除するためにカーソルを移動する
+                if fakeymacs.forward_direction:
+                    self_insert_command("Right", "Left")()
+                else:
+                    self_insert_command("Left", "Right")()
+
+            elif (checkWindow("powershell.exe$", "ConsoleWindowClass$") or # PowerShell
+                  checkWindow("EXCEL.EXE", None) or                        # Microsoft Excel
+                  checkWindow(None, "Edit$")):                             # NotePad 等
+                # 選択されているリージョンのハイライトを解除するためにカーソルを移動する
+                if fakeymacs.forward_direction:
+                    self_insert_command("Left", "Right")()
+                else:
+                    self_insert_command("Right", "Left")()
+            else:
+                # 選択されているリージョンのハイライトを解除するためにカーソルキーを発行する
+                if fakeymacs.forward_direction:
+                    self_insert_command("Right")()
+                else:
+                    self_insert_command("Left")()
+
+    def mark(func, forward_direction):
         def _func():
             if fakeymacs.is_marked:
                 # D-Shift だと、M-< や M-> 押下時に、D-Shift が解除されてしまう。その対策。
@@ -728,6 +861,10 @@ def configure(keymap):
                 delay()
                 func()
                 self_insert_command("U-LShift", "U-RShift")()
+
+                # fakeymacs.forward_direction が未設定の場合、設定する
+                if fakeymacs.forward_direction is None:
+                    fakeymacs.forward_direction = forward_direction
             else:
                 func()
         return _func
@@ -736,6 +873,7 @@ def configure(keymap):
         def _func():
             func()
             fakeymacs.is_marked = False
+            fakeymacs.forward_direction = None
         return _func
 
     def reset_counter(func):
@@ -760,9 +898,15 @@ def configure(keymap):
 
     def repeat(func):
         def _func():
-            # 以下の２行は、キーボードマクロの繰り返し実行の際に必要な設定
-            repeat_counter = fakeymacs.repeat_counter
+            if fakeymacs.repeat_counter > repeat_max:
+                print("コマンドのリピート回数の最大値を超えています")
+                repeat_counter = repeat_max
+            else:
+                repeat_counter = fakeymacs.repeat_counter
+
+            # キーボードマクロの繰り返し実行を可能とするために初期化する
             fakeymacs.repeat_counter = 1
+
             for i in range(repeat_counter):
                 func()
         return _func
@@ -776,7 +920,13 @@ def configure(keymap):
 
     def repeat3(func):
         def _func():
-            func(fakeymacs.repeat_counter)
+            if fakeymacs.repeat_counter > repeat_max:
+                print("コマンドのリピート回数の最大値を超えています")
+                repeat_counter = repeat_max
+            else:
+                repeat_counter = fakeymacs.repeat_counter
+
+            func(repeat_counter)
         return _func
 
     ##################################################
@@ -794,7 +944,6 @@ def configure(keymap):
     # https://github.com/crftwr/keyhac/blob/master/keyhac_keymap.py
     # https://github.com/crftwr/pyauto/blob/master/pyauto_const.py
     # http://www.yoshidastyle.net/2007/10/windowswin32api.html
-    # http://homepage3.nifty.com/ic/help/rmfunc/vkey.htm
     # http://www.azaelia.net/factory/vk.html
 
     ## マルチストロークキーの設定
@@ -885,45 +1034,50 @@ def configure(keymap):
     define_key(keymap_emacs, "Ctl-x d",   reset_search(reset_undo(reset_counter(reset_mark(dired)))))
 
     ## 「カーソル移動」のキー設定
-    define_key(keymap_emacs, "C-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_char))))))
-    define_key(keymap_emacs, "C-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_char))))))
-    define_key(keymap_emacs, "M-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_word))))))
-    define_key(keymap_emacs, "M-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_word))))))
-    define_key(keymap_emacs, "C-p",        reset_search(reset_undo(reset_counter(mark(repeat(previous_line))))))
-    define_key(keymap_emacs, "C-n",        reset_search(reset_undo(reset_counter(mark(repeat(next_line))))))
-    define_key(keymap_emacs, "C-a",        reset_search(reset_undo(reset_counter(mark(move_beginning_of_line)))))
-    define_key(keymap_emacs, "C-e",        reset_search(reset_undo(reset_counter(mark(move_end_of_line)))))
-    define_key(keymap_emacs, "M-S-Comma",  reset_search(reset_undo(reset_counter(mark(beginning_of_buffer)))))
-    define_key(keymap_emacs, "M-S-Period", reset_search(reset_undo(reset_counter(mark(end_of_buffer)))))
+    define_key(keymap_emacs, "C-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_char), False)))))
+    define_key(keymap_emacs, "C-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_char), True)))))
+    define_key(keymap_emacs, "M-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_word), False)))))
+    define_key(keymap_emacs, "M-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_word), True)))))
+    define_key(keymap_emacs, "C-p",        reset_search(reset_undo(reset_counter(mark(repeat(previous_line), False)))))
+    define_key(keymap_emacs, "C-n",        reset_search(reset_undo(reset_counter(mark(repeat(next_line), True)))))
+    define_key(keymap_emacs, "C-a",        reset_search(reset_undo(reset_counter(mark(move_beginning_of_line, False)))))
+    define_key(keymap_emacs, "C-e",        reset_search(reset_undo(reset_counter(mark(move_end_of_line, True)))))
+    define_key(keymap_emacs, "M-S-Comma",  reset_search(reset_undo(reset_counter(mark(beginning_of_buffer, False)))))
+    define_key(keymap_emacs, "M-S-Period", reset_search(reset_undo(reset_counter(mark(end_of_buffer, True)))))
     # define_key(keymap_emacs, "C-l",        reset_search(reset_undo(reset_counter(recenter))))
 
-    # define_key(keymap_emacs, "Left",     reset_search(reset_undo(reset_counter(mark(repeat(backward_char))))))
-    # define_key(keymap_emacs, "Right",    reset_search(reset_undo(reset_counter(mark(repeat(forward_char))))))
-    # define_key(keymap_emacs, "Up",       reset_search(reset_undo(reset_counter(mark(repeat(previous_line))))))
-    # define_key(keymap_emacs, "Down",     reset_search(reset_undo(reset_counter(mark(repeat(next_line))))))
-    # define_key(keymap_emacs, "PageUP",   reset_search(reset_undo(reset_counter(mark(scroll_up)))))
-    # define_key(keymap_emacs, "PageDown", reset_search(reset_undo(reset_counter(mark(scroll_down)))))
-    # define_key(keymap_emacs, "Home",     reset_search(reset_undo(reset_counter(mark(move_beginning_of_line)))))
-    # define_key(keymap_emacs, "End",      reset_search(reset_undo(reset_counter(mark(move_end_of_line)))))
+    # define_key(keymap_emacs, "Left",     reset_search(reset_undo(reset_counter(mark(repeat(backward_char), False)))))
+    # define_key(keymap_emacs, "Right",    reset_search(reset_undo(reset_counter(mark(repeat(forward_char), True)))))
+    # define_key(keymap_emacs, "C-Left",   reset_search(reset_undo(reset_counter(mark(repeat(backward_word), False)))))
+    # define_key(keymap_emacs, "C-Right",  reset_search(reset_undo(reset_counter(mark(repeat(forward_word), True)))))
+    # define_key(keymap_emacs, "Up",       reset_search(reset_undo(reset_counter(mark(repeat(previous_line), False)))))
+    # define_key(keymap_emacs, "Down",     reset_search(reset_undo(reset_counter(mark(repeat(next_line), True)))))
+    # define_key(keymap_emacs, "Home",     reset_search(reset_undo(reset_counter(mark(move_beginning_of_line, False)))))
+    # define_key(keymap_emacs, "End",      reset_search(reset_undo(reset_counter(mark(move_end_of_line, True)))))
+    # define_key(keymap_emacs, "C-Home",   reset_search(reset_undo(reset_counter(mark(beginning_of_buffer, False)))))
+    # define_key(keymap_emacs, "C-End",    reset_search(reset_undo(reset_counter(mark(end_of_buffer, True)))))
+    # define_key(keymap_emacs, "PageUP",   reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
+    # define_key(keymap_emacs, "PageDown", reset_search(reset_undo(reset_counter(mark(scroll_down, True)))))
 
     ## 「カット / コピー / 削除 / アンドゥ」のキー設定
-    # define_key(keymap_emacs, "Back",     reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_backward_char))))))
     define_key(keymap_emacs, "C-h",      reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_backward_char))))))
-    define_key(keymap_emacs, "Delete",   reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_char))))))
     define_key(keymap_emacs, "C-d",      reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_char))))))
-    define_key(keymap_emacs, "C-Back",   reset_search(reset_undo(reset_counter(reset_mark(repeat3(backward_kill_word))))))
     define_key(keymap_emacs, "M-Delete", reset_search(reset_undo(reset_counter(reset_mark(repeat3(backward_kill_word))))))
-    define_key(keymap_emacs, "C-Delete", reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_word))))))
     define_key(keymap_emacs, "M-d",      reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_word))))))
     define_key(keymap_emacs, "C-k",      reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_line))))))
     define_key(keymap_emacs, "C-w",      reset_search(reset_undo(reset_counter(reset_mark(kill_region)))))
     define_key(keymap_emacs, "M-w",      reset_search(reset_undo(reset_counter(reset_mark(kill_ring_save)))))
-    define_key(keymap_emacs, "C-c",      reset_search(reset_undo(reset_counter(reset_mark(kill_ring_save)))))
     define_key(keymap_emacs, "C-y",      reset_search(reset_undo(reset_counter(reset_mark(repeat(yank))))))
-    # define_key(keymap_emacs, "C-v",      reset_search(reset_undo(reset_counter(reset_mark(repeat(yank)))))) # scroll_key の設定で上書きされない場合
-    # define_key(keymap_emacs, "C-z",      reset_search(reset_counter(reset_mark(undo))))
     define_key(keymap_emacs, "C-Slash",  reset_search(reset_counter(reset_mark(undo))))
     define_key(keymap_emacs, "Ctl-x u",  reset_search(reset_counter(reset_mark(undo))))
+
+    # define_key(keymap_emacs, "Back",     reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_backward_char))))))
+    define_key(keymap_emacs, "Delete",   reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_char))))))
+    define_key(keymap_emacs, "C-Back",   reset_search(reset_undo(reset_counter(reset_mark(repeat3(backward_kill_word))))))
+    define_key(keymap_emacs, "C-Delete", reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_word))))))
+    define_key(keymap_emacs, "C-c",      reset_search(reset_undo(reset_counter(reset_mark(copy)))))
+    # define_key(keymap_emacs, "C-v",      reset_search(reset_undo(reset_counter(reset_mark(repeat(yank)))))) # scroll_key の設定で上書きされない場合
+    # define_key(keymap_emacs, "C-z",      reset_search(reset_counter(reset_mark(undo))))
 
     # C-Underscore を機能させるための設定
     if is_japanese_keyboard:
@@ -940,10 +1094,10 @@ def configure(keymap):
         define_key(keymap_emacs, "C-S-2", reset_search(reset_undo(reset_counter(set_mark_command))))
 
     define_key(keymap_emacs, "C-Space",   reset_search(reset_undo(reset_counter(set_mark_command))))
-    define_key(keymap_emacs, "Ctl-x h",   reset_search(reset_undo(reset_counter(reset_mark(mark_whole_buffer)))))
-    define_key(keymap_emacs, "Ctl-x C-p", reset_search(reset_undo(reset_counter(reset_mark(mark_page)))))
+    define_key(keymap_emacs, "Ctl-x h",   reset_search(reset_undo(reset_counter(mark_whole_buffer))))
+    define_key(keymap_emacs, "Ctl-x C-p", reset_search(reset_undo(reset_counter(mark_page))))
 
-    ## 「バッファ / ウインドウ操作」のキー設定
+    ## 「バッファ / ウィンドウ操作」のキー設定
     define_key(keymap_emacs, "Ctl-x k", reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
     define_key(keymap_emacs, "Ctl-x b", reset_search(reset_undo(reset_counter(reset_mark(switch_to_buffer)))))
     define_key(keymap_emacs, "Ctl-x o", reset_search(reset_undo(reset_counter(reset_mark(other_window)))))
@@ -983,9 +1137,9 @@ def configure(keymap):
 
     ## 「スクロール」のキー設定（上書きされないように最後に設定する）
     if scroll_key:
-        define_key(keymap_emacs, scroll_key[0], reset_search(reset_undo(reset_counter(mark(scroll_up)))))
-        define_key(keymap_emacs, scroll_key[1], reset_search(reset_undo(reset_counter(mark(scroll_up)))))
-        define_key(keymap_emacs, scroll_key[2], reset_search(reset_undo(reset_counter(mark(scroll_down)))))
+        define_key(keymap_emacs, scroll_key[0], reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
+        define_key(keymap_emacs, scroll_key[1], reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
+        define_key(keymap_emacs, scroll_key[2], reset_search(reset_undo(reset_counter(mark(scroll_down, True)))))
 
     ## 「カット」のキー設定（上書きされないように最後に設定する）
     if ctl_x_prefix_key != "C-x":
@@ -1004,7 +1158,7 @@ def configure(keymap):
                 if fakeymacs.ei_last_window == window:
                     return True
                 else:
-                    disable_emacs_ime_mode(False)
+                    disable_emacs_ime_mode(update=False)
                     return False
             else:
                 return False
@@ -1036,9 +1190,9 @@ def configure(keymap):
 
         def toggle_emacs_ime_mode():
             if fakeymacs.ei_last_window:
-                disable_emacs_ime_mode(True, True)
+                disable_emacs_ime_mode(toggle=True)
             else:
-                enable_emacs_ime_mode(True, True)
+                enable_emacs_ime_mode(toggle=True)
 
         ##################################################
         ## IME の切り替え（emacs日本語入力モード用）
@@ -1096,19 +1250,6 @@ def configure(keymap):
                             message = "[main]"
                         keymap.popBalloon("emacs_ime_mode", message, 500)
 
-        def ei_hook_mouseup(x, y, vk):
-            if fakeymacs.ei_last_window:
-                disable_emacs_ime_mode()
-            else:
-                keymap.updateKeymap()
-
-            fakeymacs.ei_hook_mouseup(x, y, vk)
-
-        # マウスのボタンが離されたときに呼び出されるフック関数を設定する
-        keymap.enableHook(True) # 設定のリロード時にフックの設定がネストしないようにコール
-        fakeymacs.ei_hook_mouseup = keyhac_hook.hook.mouseup
-        keyhac_hook.hook.mouseup = ei_hook_mouseup
-
         ##################################################
         ## キーバインド（emacs日本語入力モード用）
         ##################################################
@@ -1151,10 +1292,10 @@ def configure(keymap):
         define_key(keymap_ei, "Right",    ei_record_func(forward_char))
         define_key(keymap_ei, "Up",       ei_record_func(previous_line))
         define_key(keymap_ei, "Down",     ei_record_func(next_line))
-        define_key(keymap_ei, "PageUP",   ei_record_func(scroll_up))
-        define_key(keymap_ei, "PageDown", ei_record_func(scroll_down))
         define_key(keymap_ei, "Home",     ei_record_func(move_beginning_of_line))
         define_key(keymap_ei, "End",      ei_record_func(move_end_of_line))
+        define_key(keymap_ei, "PageUP",   ei_record_func(scroll_up))
+        define_key(keymap_ei, "PageDown", ei_record_func(scroll_down))
 
         ## 「カット / コピー / 削除 / アンドゥ」のキー設定
         define_key(keymap_ei, "Back",   ei_record_func(delete_backward_char))
@@ -1186,13 +1327,13 @@ def configure(keymap):
 
 
     ####################################################################################################
-    ## デスクトップ用の設定
+    ## デスクトップの設定
     ####################################################################################################
 
     keymap_global = keymap.defineWindowKeymap()
 
     ##################################################
-    ## ウインドウ操作（デスクトップ用）
+    ## ウィンドウ操作（デスクトップ用）
     ##################################################
 
     def popWindow(wnd):
@@ -1214,14 +1355,14 @@ def configure(keymap):
 
                 if class_name == "Emacs" or title != "":
 
-                    # 操作の対象としたくないアプリケーションソフトのクラス名称を、re.match 関数
+                    # 操作の対象としたくないアプリケーションソフトの“クラス名称”を、re.match 関数
                     # （先頭からのマッチ）の正規表現に「|」を使って繋げて指定してください。
                     # （完全マッチとするためには $ の指定が必要です。）
                     if not re.match(r"Progman$", class_name):
 
                         process_name = wnd.getProcessName()
 
-                        # 操作の対象としたくないアプリケーションソフトのプロセス名称を、re.match 関数
+                        # 操作の対象としたくないアプリケーションソフトの“プロセス名称”を、re.match 関数
                         # （先頭からのマッチ）の正規表現に「|」を使って繋げて指定してください。
                         # （完全マッチとするためには $ の指定が必要です。）
                         if not re.match(r"RocketDock.exe$", process_name): # サンプルとして RocketDock.exe を登録
@@ -1229,30 +1370,24 @@ def configure(keymap):
                             # 表示されていないストアアプリ（「設定」等）が window_list に登録されるのを抑制する
                             if class_name == "Windows.UI.Core.CoreWindow":
                                 if title in window_dict:
-                                    window_list.remove(window_dict[title])
+                                    if window_dict[title] in window_list:
+                                        window_list.remove(window_dict[title])
                                 else:
                                     window_dict[title] = wnd
+
                             elif class_name == "ApplicationFrameWindow":
                                 if title not in window_dict:
                                     window_dict[title] = wnd
                                     window_list.append(wnd)
                             else:
                                 window_list.append(wnd)
-
-                            # print(process_name + " : " + class_name + " : " + title + " : " + str(wnd.isMinimized()))
             return True
 
         window_dict = {}
         window_list = []
-        # print("----------------------------------------------------------------------------------------------------")
         Window.enum(makeWindowList, None)
 
         return window_list
-
-    def restoreWindow():
-        wnd = keymap.getTopLevelWindow()
-        if wnd and wnd.isMinimized():
-            wnd.restore()
 
     def previous_desktop():
         self_insert_command("W-C-Left")()
@@ -1261,14 +1396,10 @@ def configure(keymap):
         self_insert_command("W-C-Right")()
 
     def previous_window():
-        self_insert_command("A-S-Esc")()
-        delay(0.2)
-        keymap.delayedCall(restoreWindow, 0)
+        self_insert_command("A-S-Tab")()
 
     def next_window():
-        self_insert_command("A-Esc")()
-        delay(0.2)
-        keymap.delayedCall(restoreWindow, 0)
+        self_insert_command("A-Tab")()
 
     def previous_display():
         self_insert_command("W-S-Left")()
@@ -1295,7 +1426,7 @@ def configure(keymap):
     ## キーバインド（デスクトップ用）
     ##################################################
 
-    # 表示しているウインドウの中で、一番最近までフォーカスがあったウインドウに移動
+    # 表示しているウィンドウの中で、一番最近までフォーカスがあったウィンドウに移動
     define_key(keymap_global, other_window_key, reset_search(reset_undo(reset_counter(reset_mark(other_window)))))
 
     # アクティブウィンドウの切り替え
@@ -1322,9 +1453,31 @@ def configure(keymap):
             define_key(keymap_global, previous_key, reset_search(reset_undo(reset_counter(reset_mark(previous_desktop)))))
             define_key(keymap_global, next_key,     reset_search(reset_undo(reset_counter(reset_mark(next_desktop)))))
 
+    # IME の「単語登録」プログラムの起動
+    # define_key(keymap_global, word_register_key, keymap.ShellExecuteCommand(None, word_register_name, word_register_param, ""))
 
     ####################################################################################################
-    ## リストウィンドウ用の設定
+    ## タスク切り替え画面の設定
+    ####################################################################################################
+
+    def is_task_switching_window(window):
+        if window.getClassName() in ("MultitaskingViewFrame", "TaskSwitcherWnd"):
+            return True
+        return False
+
+    keymap_tsw = keymap.defineWindowKeymap(check_func=is_task_switching_window)
+
+    ##################################################
+    ## キーバインド（タスク切り替え画面用）
+    ##################################################
+
+    define_key(keymap_tsw, "A-p", previous_window)
+    define_key(keymap_tsw, "A-n", next_window)
+    define_key(keymap_tsw, "A-g", self_insert_command("A-Esc"))
+
+
+    ####################################################################################################
+    ## リストウィンドウの設定
     ####################################################################################################
 
     # リストウィンドウはクリップボードリストで利用していますが、クリップボードリストの機能を
@@ -1608,14 +1761,21 @@ def configure(keymap):
     ## Emacs の場合、IME 切り替え用のキーを C-\ に置き換える（オプション）
     ####################################################################################################
     if 0:
-        # NTEmacs の利用時に Windows の IME の切換えを無効とするための設定です。（mozc.el を利用する場合など）
-        # 追加したいキーがある場合は、次の方法で追加するキーの名称もしくはコードを確認し、
-        # スクリプトを修正してください。
-        # 　1) タスクバーにある Keyhac のアイコンを左クリックしてコンソールを開く。
-        # 　2) アイコンを右クリックしてメニューを開き、「内部ログ ON」を選択する。
-        # 　3) 確認したいキーを押す。
+        # emacs で mozc を利用する際に Windows の IME の切換えキーを mozc の切り替えキーとして
+        # 機能させるための設定です。初期設定では NTEmacs（gnupack 含む）と Windows の Xサーバで動く
+        # emacs を指定しています。
 
-        keymap_real_emacs = keymap.defineWindowKeymap(class_name="Emacs")
+        def is_real_emacs(window):
+            if (window.getClassName() == "Emacs" or
+                (window.getProcessName() in ("XWin.exe",       # Cygwin/X
+                                             "XWin_MobaX.exe", # MobaXterm/X
+                                             "Xming.exe",      # Xming
+                                             "vcxsrv.exe") and # VcXsrv
+                 re.search(r"^emacs@", window.getText()))): # ウィンドウのタイトルを検索する正規表現を指定
+                return True
+            return False
+
+        keymap_real_emacs = keymap.defineWindowKeymap(check_func=is_real_emacs)
 
         # IME 切り替え用のキーを C-\ に置き換える
         keymap_real_emacs["(28)"]   = keymap.InputKeyCommand("C-Yen") # [変換] キー
