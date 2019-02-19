@@ -155,6 +155,7 @@ def configure(keymap):
                         "ttermpro.exe",       # TeraTerm
                         "MobaXterm.exe",      # MobaXterm
                         "TurboVNC.exe",       # TurboVNC
+                        "devenv.exe",         # Visual Studio
                         "vncviewer.exe"]      # UltraVNC
 
     # IME の切り替え“のみをしたい”アプリケーションソフトを指定する
@@ -1161,6 +1162,12 @@ def configure(keymap):
     if ctl_x_prefix_key != "C-x":
         define_key(keymap_emacs, "C-x", reset_search(reset_undo(reset_counter(reset_mark(kill_region)))))
 
+    ####################################################################################################
+    ## Visual Studioのキーバインド
+    ####################################################################################################
+    keymap_devenv = keymap.defineWindowKeymap( exe_name="devenv.exe")
+
+    keymap_devenv[ "C-h" ] = "Back"
 
     ####################################################################################################
     ## emacs日本語入力モードの設定
