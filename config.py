@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20180410_01
+## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20190207_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.75 以降で動作します。
@@ -15,8 +15,8 @@
 # 本設定を利用するための仕様は、以下を参照してください。
 #
 # ＜共通の仕様＞
-# ・not_emacs_target 変数と ime_target 変数で、emacsキーバインドや IME の切り替えキーバインド
-#   の対象とするアプリケーションソフトを指定できる。
+# ・emacs_tareget_class 変数、not_emacs_target 変数、ime_target 変数で、emacsキーバインドや
+#   IME の切り替えキーバインドの対象とするアプリケーションソフトを指定できる。
 # ・not_clipboard_target 変数で、clipboard 監視の対象外とするアプリケーションソフトを指定
 #   できる。
 # ・日本語と英語のどちらのキーボードを利用するかを is_japanese_keyboard 変数で指定できる。
@@ -85,6 +85,8 @@
 #   この設定では、Sakura Editor のみ対応している。
 # ・キーボードマクロは emacs の挙動と異なり、IME の変換キーも含めた入力したキーそのものを
 #   記録する。このため、キーボードマクロ記録時や再生時、IME の状態に留意した利用が必要。
+# ・kill-buffer に Ctl-x k とは別に M-k も割り当てている。プラウザのタブを削除する際
+#   などに利用可。
 #
 # ＜全てのアプリケーションソフトで共通の動き＞
 # ・other_window_key 変数に設定したキーにより、表示しているウィンドウの中で、一番最近
@@ -129,6 +131,9 @@ def configure(keymap):
     ## カスタマイズの設定
     ####################################################################################################
 
+    # emacs のキーバインドにするウィンドウのクラスネームを指定する（全ての設定に優先する）
+    emacs_target_class   = ["Edit"]               # テキスト入力フィールドなどが該当
+
     # emacs のキーバインドに“したくない”アプリケーションソフトを指定する
     # （Keyhac のメニューから「内部ログ」を ON にすると processname や classname を確認することができます）
     not_emacs_target = ["cmd.exe",            # cmd
@@ -136,6 +141,8 @@ def configure(keymap):
                         "ubuntu.exe",         # WSL
                         "SLES-12.exe",        # WSL
                         "openSUSE-42.exe",    # WSL
+                        "debian.exe",         # WSL
+                        "kali.exe",           # WSL
                         "mintty.exe",         # mintty
                         "Cmder.exe",          # Cmder
                         "ConEmu.exe",         # ConEmu
@@ -145,6 +152,7 @@ def configure(keymap):
                         "emacs-w32.exe",      # Emacs
                         "gvim.exe",           # GVim
                         "sublime_text.exe",   # Sublime Text
+                        "Code.exe",           # VSCode
                         "xyzzy.exe",          # xyzzy
                         "VirtualBox.exe",     # VirtualBox
                         "XWin.exe",           # Cygwin/X
@@ -163,14 +171,19 @@ def configure(keymap):
     ime_target   = ["cmd.exe",            # cmd
                     "bash.exe",           # WSL
                     "ubuntu.exe",         # WSL
+                    "ubuntu1604.exe",     # WSL
+                    "ubuntu1804.exe",     # WSL
                     "SLES-12.exe",        # WSL
                     "openSUSE-42.exe",    # WSL
+                    "debian.exe",         # WSL
+                    "kali.exe",           # WSL
                     "mintty.exe",         # mintty
                     "Cmder.exe",          # Cmder
                     "ConEmu.exe",         # ConEmu
                     "ConEmu64.exe",       # ConEmu
                     "gvim.exe",           # GVim
                     "sublime_text.exe",   # Sublime Text
+                    "Code.exe",           # VSCode
                     "xyzzy.exe",          # xyzzy
                     "putty.exe",          # PuTTY
                     "ttermpro.exe",       # TeraTerm
@@ -238,8 +251,8 @@ def configure(keymap):
     # （切り替え画面が起動した後は、A-p、A-n でウィンドウを切り替えられるように設定している他、
     #   Alt + 矢印キーでもウィンドウを切り替えることができます。また、A-g もしくは A-Esc で切り替え画面の
     #   終了（キャンセル）となり、Altキーを離すか A-Enter で切り替えるウィンドウの確定となります。）
-    # window_switching_key = None # A-S-Tab、A-Tabキーのみを利用する
-    window_switching_key = [["A-p", "A-n"]]
+    # window_switching_key = [["A-p", "A-n"]]
+    window_switching_key = None # A-S-Tab、A-Tabキーのみを利用する
 
     # アクティブウィンドウをディスプレイ間で移動するキーの組み合わせ（前、後 の順）を指定する（複数指定可）
     # （other_window_key に割り当てている A-o との連係した利用を想定し、A-S-o も割り当てています）
@@ -306,6 +319,10 @@ def configure(keymap):
         if is_list_window(window):
             return False
 
+        if window.getClassName() in emacs_target_class:
+            fakeymacs.keybind = "emacs"
+            return True
+
         if window.getProcessName() in not_emacs_target:
             fakeymacs.keybind = "not_emacs"
             return False
@@ -314,8 +331,12 @@ def configure(keymap):
         return True
 
     def is_ime_target(window):
+        if window.getClassName() in emacs_target_class:
+            return False
+
         if window.getProcessName() in ime_target:
             return True
+
         return False
 
     if use_emacs_ime_mode:
@@ -1118,6 +1139,7 @@ def configure(keymap):
     define_key(keymap_emacs, "Ctl-x k", reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
     define_key(keymap_emacs, "Ctl-x b", reset_search(reset_undo(reset_counter(reset_mark(switch_to_buffer)))))
     define_key(keymap_emacs, "Ctl-x o", reset_search(reset_undo(reset_counter(reset_mark(other_window)))))
+    define_key(keymap_emacs, "M-k",     reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
 
     ## 「文字列検索 / 置換」のキー設定
     define_key(keymap_emacs, "C-r",   reset_undo(reset_counter(reset_mark(isearch_backward))))
@@ -1339,9 +1361,9 @@ def configure(keymap):
 
         ## 「スクロール」のキー設定（上書きされないように最後に設定する）
         if scroll_key:
-            define_key(keymap_ei, scroll_key[0].replace("M-", "A-"), ei_record_func(scroll_up))
-            define_key(keymap_ei, scroll_key[1].replace("M-", "A-"), ei_record_func(scroll_up))
-            define_key(keymap_ei, scroll_key[2].replace("M-", "A-"), ei_record_func(scroll_down))
+            define_key(keymap_ei, scroll_key[0] and scroll_key[0].replace("M-", "A-"), ei_record_func(scroll_up))
+            define_key(keymap_ei, scroll_key[1] and scroll_key[1].replace("M-", "A-"), ei_record_func(scroll_down))
+            define_key(keymap_ei, scroll_key[2] and scroll_key[2].replace("M-", "A-"), ei_record_func(scroll_down))
 
         ## emacs日本語入力モードを切り替える（トグルする）
         define_key(keymap_emacs, toggle_emacs_ime_mode_key, toggle_emacs_ime_mode)
@@ -1479,6 +1501,7 @@ def configure(keymap):
     # IME の「単語登録」プログラムの起動
     # define_key(keymap_global, word_register_key, keymap.ShellExecuteCommand(None, word_register_name, word_register_param, ""))
 
+
     ####################################################################################################
     ## タスク切り替え画面の設定
     ####################################################################################################
@@ -1600,9 +1623,9 @@ def configure(keymap):
     define_key(keymap_lw, "A-n", next_line)
 
     if scroll_key:
-        define_key(keymap_lw, scroll_key[0].replace("M-", "A-"), scroll_up)
-        define_key(keymap_lw, scroll_key[1].replace("M-", "A-"), scroll_up)
-        define_key(keymap_lw, scroll_key[2].replace("M-", "A-"), scroll_down)
+        define_key(keymap_lw, scroll_key[0] and scroll_key[0].replace("M-", "A-"), scroll_up)
+        define_key(keymap_lw, scroll_key[1] and scroll_key[1].replace("M-", "A-"), scroll_down)
+        define_key(keymap_lw, scroll_key[2] and scroll_key[2].replace("M-", "A-"), scroll_down)
 
     ## 「カット / コピー / 削除 / アンドゥ」のキー設定
     define_key(keymap_lw, "C-h", delete_backward_char)
@@ -1793,8 +1816,13 @@ def configure(keymap):
                 (window.getProcessName() in ("XWin.exe",       # Cygwin/X
                                              "XWin_MobaX.exe", # MobaXterm/X
                                              "Xming.exe",      # Xming
-                                             "vcxsrv.exe") and # VcXsrv
-                 re.search(r"^emacs@", window.getText()))): # ウィンドウのタイトルを検索する正規表現を指定
+                                             "vcxsrv.exe")     # VcXsrv
+                 and
+                 # ウィンドウのタイトルを検索する正規表現を指定する
+                 # emacs を起動しているウィンドウを検索できるように、emacs の frame-title-format 変数を
+                 # 次のように設定するなどして、識別できるようにする
+                 # (setq frame-title-format (format "emacs-%s - %%b" emacs-version))
+                 re.search(r"^emacs-", window.getText()))):
                 return True
             return False
 
