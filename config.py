@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20190207_01
+## Windows の操作を emacs のキーバインドで行うための設定（Keyhac版）ver.20190327_02
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.75 以降で動作します。
@@ -83,8 +83,8 @@
 # ・C-y を前置引数を指定して実行すると、ヤンク（ペースト）の繰り返しが行われる。
 # ・C-l は、アプリケーションソフト個別対応とする。recenter 関数で個別に指定すること。
 #   この設定では、Sakura Editor のみ対応している。
-# ・キーボードマクロは emacs の挙動と異なり、IME の変換キーも含めた入力したキーそのものを
-#   記録する。このため、キーボードマクロ記録時や再生時、IME の状態に留意した利用が必要。
+# ・キーボードマクロの再生時に IME の状態に依存した動作とならないようにするため、
+#   キーボードマクロの記録と再生の開始時に IME を強制的に OFF にするようにしている。
 # ・kill-buffer に Ctl-x k とは別に M-k も割り当てている。プラウザのタブを削除する際
 #   などに利用可。
 #
@@ -139,6 +139,8 @@ def configure(keymap):
     not_emacs_target = ["cmd.exe",            # cmd
                         "bash.exe",           # WSL
                         "ubuntu.exe",         # WSL
+                        "ubuntu1604.exe",     # WSL
+                        "ubuntu1804.exe",     # WSL
                         "SLES-12.exe",        # WSL
                         "openSUSE-42.exe",    # WSL
                         "debian.exe",         # WSL
@@ -394,7 +396,7 @@ def configure(keymap):
 
     def toggle_input_method():
         self_insert_command("A-(25)")()
-        delay(0.05)
+        delay(0.1)
 
         # IME の状態を格納する
         ime_status = keymap.getWindow().getImeStatus()
@@ -409,6 +411,8 @@ def configure(keymap):
 
             # IME の状態をバルーンヘルプで表示する
             keymap.popBalloon("ime_status", message, 500)
+
+        delay(0.1)
 
     ##################################################
     ## ファイル操作
@@ -666,6 +670,8 @@ def configure(keymap):
     ##################################################
 
     def kmacro_start_macro():
+        if keymap.getWindow().getImeStatus():
+            toggle_input_method()
         keymap.command_RecordStart()
 
     def kmacro_end_macro():
@@ -693,9 +699,14 @@ def configure(keymap):
                        keymap.record_seq.append((ctl_x_prefix_vkey[0], True))
 
     def kmacro_end_and_call_macro():
-        fakeymacs.is_playing_kmacro = True
-        keymap.command_RecordPlay()
-        fakeymacs.is_playing_kmacro = False
+        def callKmacro():
+            fakeymacs.is_playing_kmacro = True
+            if keymap.getWindow().getImeStatus():
+                toggle_input_method()
+            keymap.command_RecordPlay()
+            fakeymacs.is_playing_kmacro = False
+
+        keymap.delayedCall(callKmacro, 0)
 
     ##################################################
     ## その他
@@ -1133,6 +1144,7 @@ def configure(keymap):
 
     define_key(keymap_emacs, "C-Space",   reset_search(reset_undo(reset_counter(set_mark_command))))
     define_key(keymap_emacs, "Ctl-x h",   reset_search(reset_undo(reset_counter(mark_whole_buffer))))
+    define_key(keymap_emacs, "M-a",   reset_search(reset_undo(reset_counter(mark_whole_buffer))))
     define_key(keymap_emacs, "Ctl-x C-p", reset_search(reset_undo(reset_counter(mark_page))))
 
     ## 「バッファ / ウィンドウ操作」のキー設定
