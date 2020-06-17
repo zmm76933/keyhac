@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200605_01
+## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200616_02
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
@@ -227,6 +227,7 @@ def configure(keymap):
                         "TurboVNC.exe",           # TurboVNC
                         "vncviewer.exe",          # UltraVNC
                         "vncviewer64.exe",        # UltraVNC
+                        "TeamViewer.exe",         # TeamViewer
                         "Xpra-Launcher.exe",      # Xpra
                        ]
 
@@ -351,15 +352,7 @@ def configure(keymap):
         ime_reconv_space  = True   # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
                                    # どうかを指定する
 
-    ## Google日本語入力の「MS-IME」のキー設定の場合
-    if 0:
-        ime_reconv_key = "W-Slash" # 「再変換」キー
-        ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
-        ime_reconv_region = True   # 「再変換」の時にリージョンの選択が必要かどうかを指定する
-        ime_reconv_space  = False  # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
-                                   # どうかを指定する
-
-    ## Google日本語入力の「ことえり」のキー設定の場合
+    ## Google日本語入力 の場合
     if 0:
         ime_reconv_key = "W-Slash" # 「再変換」キー
         ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
@@ -372,7 +365,8 @@ def configure(keymap):
     # Emacs日本語入力モードを利用する際に、IME のショートカットを置き換えるキーの組み合わせ
     # （置き換え先、置き換え元）を指定する
     # （if 文箇所は、Microsoft IME で「ことえり」のキーバインドを利用するための設定例です。
-    # 　この設定例は、Google日本語入力を利用の際に有効となっていても問題ありません。）
+    # 　この設定は、Google日本語入力で「ことえり」のキー設定になっている場合には不要ですが、
+    # 　設定を行っても問題はありません。）
     emacs_ime_mode_key = []
     if 1:
         emacs_ime_mode_key += [["C-i", "S-Left"],      # 文節を縮める
@@ -931,7 +925,9 @@ def configure(keymap):
     def newline():
         self_insert_command("Enter")()
         if not use_emacs_ime_mode:
-            fakeymacs.ime_cancel = True
+            if keymap.getWindow().getImeStatus():
+                fakeymacs.ime_cancel = True
+
     def newline_and_indent():
         self_insert_command("Enter", "Tab")()
 
@@ -1077,14 +1073,16 @@ def configure(keymap):
                 keymap[keys_list[0]][keys_list[1]] = command
 
     def self_insert_command(*keys):
+        func = keymap.InputKeyCommand(*list(map(addSideOfModifierKey, keys)))
         def _func():
-            keymap.InputKeyCommand(*list(map(addSideOfModifierKey, keys)))()
+            func()
             fakeymacs.ime_cancel = False
         return _func
 
     def self_insert_command2(*keys):
+        func = self_insert_command(*keys)
         def _func():
-            self_insert_command(*keys)()
+            func()
             if use_emacs_ime_mode:
                 if keymap.getWindow().getImeStatus():
                     enable_emacs_ime_mode()
@@ -2198,10 +2196,11 @@ def configure(keymap):
 
         def is_real_emacs(window):
             if (window.getClassName() == "Emacs" or
-                (window.getProcessName() in ("XWin.exe",       # Cygwin/X
-                                             "XWin_MobaX.exe", # MobaXterm/X
-                                             "Xming.exe",      # Xming
-                                             "vcxsrv.exe")     # VcXsrv
+                (window.getProcessName() in ["XWin.exe",          # Cygwin/X
+                                             "XWin_MobaX.exe",    # MobaXterm/X
+                                             "Xming.exe",         # Xming
+                                             "vcxsrv.exe",        # VcXsrv
+                                             "Xpra-Launcher.exe"] # Xpra
                  and
                  # ウィンドウのタイトルを検索する正規表現を指定する
                  # Emacs を起動しているウィンドウを検索できるように、Emacs の frame-title-format 変数を
