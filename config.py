@@ -276,6 +276,9 @@ def configure(keymap):
     # Escキーを Metaキーとして使うかどうかを指定する（True: 使う、False: 使わない）
     use_esc_as_meta = False
 
+    # C-[キーを MultiStrokeキーとして使うかどうかを指定する（True: 使う、False: 使わない）
+    use_multi_stroke_open_bracket_as_esc = False
+
     # Ctl-xプレフィックスキーに使うキーを指定する
     # （Ctl-xプレフィックスキーのモディファイアキーは、Ctrl または Alt のいずれかから指定してください）
     ctl_x_prefix_key = "C-x"
@@ -1046,7 +1049,8 @@ def configure(keymap):
             elif keys_lists[0][0].startswith("M-"):
                 key = re.sub("^M-", "", keys_lists[0][0])
                 keys_lists[0][0] = "A-" + key
-                keys_lists.append(["C-OpenBracket", key])
+                if  use_multi_stroke_open_bracket_as_esc:
+                    keys_lists.append(["C-OpenBracket", key])
                 if use_esc_as_meta:
                     keys_lists.append(["Esc", key])
 
@@ -1242,7 +1246,8 @@ def configure(keymap):
     ## マルチストロークキーの設定
     define_key(keymap_emacs, "Ctl-x",         keymap.defineMultiStrokeKeymap(ctl_x_prefix_key))
     define_key(keymap_emacs, "C-q",           keymap.defineMultiStrokeKeymap("C-q"))
-    define_key(keymap_emacs, "C-OpenBracket", keymap.defineMultiStrokeKeymap("C-OpenBracket"))
+    if  use_multi_stroke_open_bracket_as_esc:
+        define_key(keymap_emacs, "C-OpenBracket", keymap.defineMultiStrokeKeymap("C-OpenBracket"))
     if use_esc_as_meta:
         define_key(keymap_emacs, "Esc", keymap.defineMultiStrokeKeymap("Esc"))
 
@@ -1304,7 +1309,10 @@ def configure(keymap):
             define_key(keymap_ime,   "A-S-" + s_vkey, self_insert_command("A-" + s_vkey))
 
     ## Escキーの設定
-    define_key(keymap_emacs, "C-OpenBracket C-OpenBracket", reset_undo(reset_counter(self_insert_command("Esc"))))
+    if use_multi_stroke_open_bracket_as_esc:
+        define_key(keymap_emacs, "C-OpenBracket C-OpenBracket", reset_undo(reset_counter(self_insert_command("Esc"))))
+    else:
+        define_key(keymap_emacs, "C-OpenBracket", reset_undo(reset_counter(self_insert_command("Esc"))))
     if use_esc_as_meta:
         define_key(keymap_emacs, "Esc Esc", reset_undo(reset_counter(self_insert_command("Esc"))))
     else:
