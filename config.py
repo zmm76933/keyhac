@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200616_02
+## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200619_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
@@ -191,8 +191,7 @@ def configure(keymap):
 
     # Emacs のキーバインドに“したくない”アプリケーションソフトを指定する
     # （Keyhac のメニューから「内部ログ」を ON にすると processname や classname を確認することができます）
-    not_emacs_target = ["cmd.exe",                # cmd
-                        "bash.exe",               # WSL
+    not_emacs_target = ["bash.exe",               # WSL
                         "ubuntu.exe",             # WSL
                         "ubuntu1604.exe",         # WSL
                         "ubuntu1804.exe",         # WSL
@@ -233,8 +232,7 @@ def configure(keymap):
 
     # IME の切り替え“のみをしたい”アプリケーションソフトを指定する
     # （指定できるアプリケーションソフトは、not_emacs_target で（除外）指定したものからのみとなります）
-    ime_target           = ["cmd.exe"                 # cmd
-                            "bash.exe",               # WSL
+    ime_target           = ["bash.exe",               # WSL
                             "ubuntu.exe",             # WSL
                             "ubuntu1604.exe",         # WSL
                             "ubuntu1804.exe",         # WSL
@@ -327,6 +325,7 @@ def configure(keymap):
     ## IME の「再変換」のために利用するキーを設定する（複数指定可）
     reconversion_key = []
     reconversion_key += ["C-t"]
+    # reconversion_key += ["C-Back"] # C-t を Chrome のショートカットキーとして使いたい場合の代替え案
     # reconversion_key += ["(28)"]   # [変換] キーを利用する場合でも、本機能を全て使うためには設定が必要
     # reconversion_key += ["O-RAlt"] # ワンショットモディファイアの指定も可能
 
@@ -355,9 +354,17 @@ def configure(keymap):
         ime_reconv_space  = True   # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
                                    # どうかを指定する
 
-    ## Google日本語入力 の場合
+    ## Google日本語入力の「MS-IME」のキー設定の場合
     if 0:
-        ime_reconv_key = "W-Slash" # 「再変換」キー
+        ime_reconv_key = "(28)"    # 「再変換」キー
+        ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
+        ime_reconv_region = True   # 「再変換」の時にリージョンの選択が必要かどうかを指定する
+        ime_reconv_space  = False  # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
+                                   # どうかを指定する
+
+    ## Google日本語入力の「ことえり」のキー設定の場合
+    if 0:
+        ime_reconv_key = "C-S-r"   # 「再変換」キー
         ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
         ime_reconv_region = True   # 「再変換」の時にリージョンの選択が必要かどうかを指定する
         ime_reconv_space  = False  # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
@@ -597,6 +604,8 @@ def configure(keymap):
             if fakeymacs.ime_cancel:
                 self_insert_command(cancel_key)()
                 if use_emacs_ime_mode:
+                    # バルーンメッセージのマークがずれて表示されないようにディレイを追加
+                    delay()
                     enable_emacs_ime_mode()
             else:
                 if ime_reconv_region:
@@ -918,7 +927,6 @@ def configure(keymap):
 
     def space():
         self_insert_command("Space")()
-
         if use_emacs_ime_mode:
             if ime_reconv_space:
                 if keymap.getWindow().getImeStatus():
@@ -1503,14 +1511,20 @@ def configure(keymap):
 
         def is_emacs_ime_mode(window):
             if fakeymacs.ei_last_window == window:
-                ei_popBalloon(1)
                 return True
             else:
                 fakeymacs.ei_last_window = None
+                return False
+
+        def is_emacs_ime_mode2(window):
+            if is_emacs_ime_mode(window):
+                ei_popBalloon(1)
+                return True
+            else:
                 ei_popBalloon(0)
                 return False
 
-        keymap_ei = keymap.defineWindowKeymap(check_func=is_emacs_ime_mode)
+        keymap_ei = keymap.defineWindowKeymap(check_func=is_emacs_ime_mode2)
 
         # Emacs日本語入力モードが開始されたときのウィンドウオブジェクトを格納する変数を初期化する
         fakeymacs.ei_last_window = None
