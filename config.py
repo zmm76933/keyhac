@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を Emacs#  のキーバインドで行うための設定（Keyhac版）ver.20200619_01
+## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200619_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
@@ -1474,7 +1474,6 @@ def configure(keymap):
     define_key(keymap_emacs, "M-x", reset_search(reset_undo(reset_counter(reset_mark(kill_region)))))
     define_key(keymap_emacs, "M-v", reset_search(reset_undo(reset_counter(reset_mark(repeat(yank))))))
     define_key(keymap_emacs, "M-s", reset_search(reset_undo(reset_counter(reset_mark(save_buffer)))))
-    define_key(keymap_emacs, "M-w", reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
     define_key(keymap_emacs, "M-a", reset_search(reset_undo(reset_counter(mark_whole_buffer))))
     define_key(keymap_emacs, "M-f", reset_undo(reset_counter(reset_mark(isearch_forward))))
 
