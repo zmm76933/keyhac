@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200619_01
+## Windows の操作を Emacs#  のキーバインドで行うための設定（Keyhac版）ver.20200619_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
@@ -259,10 +259,10 @@ def configure(keymap):
     # clipboard 監視の対象外とするアプリケーションソフトを指定する
     not_clipboard_target = ["EXCEL.EXE"]              # Excel
 
-    # 左右どちらの Ctrlキーを使うかを指定する（"L": 左、"R": 右）
-    side_of_ctrl_key = "L"
-
-    # 左右どちらの Altキーを使うかを指定する（"L": 左、"R": 右）
+    # 左右どちらの Ctrlキーを使うかを指定する（"L": 左、"R": 右、"": 両方）
+    side_of_ctrl_key = ""
+    
+    # 左右どちらの Altキーを使うかを指定する（"L": 左、"R": 右、"": 両方）
     side_of_alt_key = "L"
 
     # 左右どちらの Winキーを使うかを指定する（"L": 左、"R": 右）
@@ -283,7 +283,7 @@ def configure(keymap):
 
     # スクロールに使うキーの組み合わせ（Up、Down の順）を指定する
     # scroll_key = None # PageUp、PageDownキーのみを利用する
-    scroll_key = ["C-z", "M-v", "C-v"]
+    scroll_key = ["C-z", "C-v"]
 
     # Emacs日本語入力モードを使うかどうかを指定する（True: 使う、False: 使わない）
     use_emacs_ime_mode = False
@@ -324,7 +324,7 @@ def configure(keymap):
 
     ## IME の「再変換」のために利用するキーを設定する（複数指定可）
     reconversion_key = []
-    reconversion_key += ["C-t"]
+    # reconversion_key += ["C-t"]
     # reconversion_key += ["C-Back"] # C-t を Chrome のショートカットキーとして使いたい場合の代替え案
     # reconversion_key += ["(28)"]   # [変換] キーを利用する場合でも、本機能を全て使うためには設定が必要
     # reconversion_key += ["O-RAlt"] # ワンショットモディファイアの指定も可能
@@ -403,13 +403,13 @@ def configure(keymap):
     use_alt_shift_digit_key_for_f13_to_f24 = False
 
     # 表示しているウィンドウの中で、一番最近までフォーカスがあったウィンドウに移動するキーを指定する
-    other_window_key = "A-o"
+    other_window_key = ""
 
     # クリップボードリストを起動するキーを指定する
     clipboardList_key = "A-y"
 
     # ランチャーリストを起動するキーを指定する
-    lancherList_key = "A-l"
+    lancherList_key = ""
 
     # アクティブウィンドウを切り替えるキーの組み合わせ（前、後 の順）を指定する（複数指定可）
     # （内部で A-Tab による切り替えを行っているため、設定するキーは Altキーとの組み合わせとしてください）
@@ -557,14 +557,18 @@ def configure(keymap):
         if keyCondition.mod == MODKEY_CTRL:
             if side_of_ctrl_key == "L":
                 ctl_x_prefix_vkey = [VK_LCONTROL, keyCondition.vk]
-            else:
+            elif side_of_ctrl_key == "R":
                 ctl_x_prefix_vkey = [VK_RCONTROL, keyCondition.vk]
+            else:
+                ctl_x_prefix_vkey = [VK_CONTROL, keyCondition.vk]
 
         elif keyCondition.mod == MODKEY_ALT:
             if side_of_alt_key == "L":
                 ctl_x_prefix_vkey = [VK_LMENU, keyCondition.vk]
-            else:
+            elif side_of_alt_key == "R" :
                 ctl_x_prefix_vkey = [VK_RMENU, keyCondition.vk]
+            else:
+                ctl_x_prefix_vkey = [VK_MENU, keyCondition.vk]
         else:
             print("Ctl-xプレフィックスキーのモディファイアキーは、Ctrl または Alt のいずれかから指定してください")
 
@@ -1252,8 +1256,8 @@ def configure(keymap):
     # http://www3.airnet.ne.jp/saka/hardware/keyboard/109scode.html
 
     ## マルチストロークキーの設定
-    define_key(keymap_emacs, "Ctl-x",         keymap.defineMultiStrokeKeymap(ctl_x_prefix_key))
-    define_key(keymap_emacs, "C-q",           keymap.defineMultiStrokeKeymap("C-q"))
+    # define_key(keymap_emacs, "Ctl-x",         keymap.defineMultiStrokeKeymap(ctl_x_prefix_key))
+    # define_key(keymap_emacs, "C-q",           keymap.defineMultiStrokeKeymap("C-q"))
     if  use_multi_stroke_open_bracket_as_esc:
         define_key(keymap_emacs, "C-OpenBracket", keymap.defineMultiStrokeKeymap("C-OpenBracket"))
     if use_esc_as_meta:
@@ -1296,25 +1300,25 @@ def configure(keymap):
     #     define_key(keymap_ime,   s_vkey, self_insert_command2(s_vkey))
 
     ## quoted-insertキーの設定
-    for vkey in vkeys():
-        s_vkey = "(" + str(vkey) + ")"
-        define_key(keymap_emacs, "C-q "     + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command(         s_vkey))))))
-        define_key(keymap_emacs, "C-q S-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("S-"   + s_vkey))))))
-        define_key(keymap_emacs, "C-q C-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("C-"   + s_vkey))))))
-        define_key(keymap_emacs, "C-q C-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("C-S-" + s_vkey))))))
-        define_key(keymap_emacs, "C-q A-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("A-"   + s_vkey))))))
-        define_key(keymap_emacs, "C-q A-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("A-S-" + s_vkey))))))
-        define_key(keymap_emacs, "C-q W-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("W-"   + s_vkey))))))
-        define_key(keymap_emacs, "C-q W-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("W-S-" + s_vkey))))))
+    # for vkey in vkeys():
+    #     s_vkey = "(" + str(vkey) + ")"
+    #     define_key(keymap_emacs, "C-q "     + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command(         s_vkey))))))
+    #     define_key(keymap_emacs, "C-q S-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("S-"   + s_vkey))))))
+    #     define_key(keymap_emacs, "C-q C-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("C-"   + s_vkey))))))
+    #     define_key(keymap_emacs, "C-q C-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("C-S-" + s_vkey))))))
+    #     define_key(keymap_emacs, "C-q A-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("A-"   + s_vkey))))))
+    #     define_key(keymap_emacs, "C-q A-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("A-S-" + s_vkey))))))
+    #     define_key(keymap_emacs, "C-q W-"   + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("W-"   + s_vkey))))))
+    #     define_key(keymap_emacs, "C-q W-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("W-S-" + s_vkey))))))
 
     ## C-S-[a-z] -> C-[a-z]、A-S-[a-z] -> A-[a-z] の置き換え設定（Emacsシフトモードの設定）
-    if use_emacs_shift_mode:
-        for vkey in range(VK_A, VK_Z + 1):
-            s_vkey = "(" + str(vkey) + ")"
-            define_key(keymap_emacs, "C-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("C-" + s_vkey))))))
-            define_key(keymap_emacs, "A-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("A-" + s_vkey))))))
-            define_key(keymap_ime,   "C-S-" + s_vkey, self_insert_command("C-" + s_vkey))
-            define_key(keymap_ime,   "A-S-" + s_vkey, self_insert_command("A-" + s_vkey))
+    # if use_emacs_shift_mode:
+    #     for vkey in range(VK_A, VK_Z + 1):
+    #         s_vkey = "(" + str(vkey) + ")"
+    #         define_key(keymap_emacs, "C-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("C-" + s_vkey))))))
+    #         define_key(keymap_emacs, "A-S-" + s_vkey, reset_search(reset_undo(reset_counter(reset_mark(self_insert_command("A-" + s_vkey))))))
+    #         define_key(keymap_ime,   "C-S-" + s_vkey, self_insert_command("C-" + s_vkey))
+    #         define_key(keymap_ime,   "A-S-" + s_vkey, self_insert_command("A-" + s_vkey))
 
     ## Escキーの設定
     if use_multi_stroke_open_bracket_as_esc:
@@ -1339,22 +1343,22 @@ def configure(keymap):
     define_key(keymap_ime,   "A-(25)", toggle_input_method)
 
     ## 「ファイル操作」のキー設定
-    define_key(keymap_emacs, "Ctl-x C-f", reset_search(reset_undo(reset_counter(reset_mark(find_file)))))
-    define_key(keymap_emacs, "Ctl-x C-s", reset_search(reset_undo(reset_counter(reset_mark(save_buffer)))))
-    define_key(keymap_emacs, "Ctl-x C-w", reset_search(reset_undo(reset_counter(reset_mark(write_file)))))
-    define_key(keymap_emacs, "Ctl-x d",   reset_search(reset_undo(reset_counter(reset_mark(dired)))))
+    # define_key(keymap_emacs, "Ctl-x C-f", reset_search(reset_undo(reset_counter(reset_mark(find_file)))))
+    # define_key(keymap_emacs, "Ctl-x C-s", reset_search(reset_undo(reset_counter(reset_mark(save_buffer)))))
+    # define_key(keymap_emacs, "Ctl-x C-w", reset_search(reset_undo(reset_counter(reset_mark(write_file)))))
+    # define_key(keymap_emacs, "Ctl-x d",   reset_search(reset_undo(reset_counter(reset_mark(dired)))))
 
     ## 「カーソル移動」のキー設定
     define_key(keymap_emacs, "C-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_char), False)))))
     define_key(keymap_emacs, "C-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_char), True)))))
-    define_key(keymap_emacs, "M-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_word), False)))))
-    define_key(keymap_emacs, "M-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_word), True)))))
+    # define_key(keymap_emacs, "M-b",        reset_search(reset_undo(reset_counter(mark(repeat(backward_word), False)))))
+    # define_key(keymap_emacs, "M-f",        reset_search(reset_undo(reset_counter(mark(repeat(forward_word), True)))))
     define_key(keymap_emacs, "C-p",        reset_search(reset_undo(reset_counter(mark(repeat(previous_line), False)))))
     define_key(keymap_emacs, "C-n",        reset_search(reset_undo(reset_counter(mark(repeat(next_line), True)))))
     define_key(keymap_emacs, "C-a",        reset_search(reset_undo(reset_counter(mark(move_beginning_of_line, False)))))
     define_key(keymap_emacs, "C-e",        reset_search(reset_undo(reset_counter(mark(move_end_of_line, True)))))
-    define_key(keymap_emacs, "M-S-Comma",  reset_search(reset_undo(reset_counter(mark(beginning_of_buffer, False)))))
-    define_key(keymap_emacs, "M-S-Period", reset_search(reset_undo(reset_counter(mark(end_of_buffer, True)))))
+    # define_key(keymap_emacs, "M-S-Comma",  reset_search(reset_undo(reset_counter(mark(beginning_of_buffer, False)))))
+    # define_key(keymap_emacs, "M-S-Period", reset_search(reset_undo(reset_counter(mark(end_of_buffer, True)))))
     # define_key(keymap_emacs, "C-l",        reset_search(reset_undo(reset_counter(recenter))))
 
     # if not use_emacs_shift_mode:
@@ -1396,20 +1400,20 @@ def configure(keymap):
     ## 「カット / コピー / 削除 / アンドゥ」のキー設定
     define_key(keymap_emacs, "C-h",      reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_backward_char))))))
     define_key(keymap_emacs, "C-d",      reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_char))))))
-    define_key(keymap_emacs, "M-Delete", reset_search(reset_undo(reset_counter(reset_mark(repeat3(backward_kill_word))))))
-    define_key(keymap_emacs, "M-d",      reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_word))))))
+    # define_key(keymap_emacs, "M-Delete", reset_search(reset_undo(reset_counter(reset_mark(repeat3(backward_kill_word))))))
+    # define_key(keymap_emacs, "M-d",      reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_word))))))
     define_key(keymap_emacs, "C-k",      reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_line))))))
     define_key(keymap_emacs, "C-w",      reset_search(reset_undo(reset_counter(reset_mark(kill_region)))))
     define_key(keymap_emacs, "M-w",      reset_search(reset_undo(reset_counter(reset_mark(kill_ring_save)))))
     define_key(keymap_emacs, "C-y",      reset_search(reset_undo(reset_counter(reset_mark(repeat(yank))))))
     define_key(keymap_emacs, "C-Slash",  reset_search(reset_counter(reset_mark(undo))))
-    define_key(keymap_emacs, "Ctl-x u",  reset_search(reset_counter(reset_mark(undo))))
+    # define_key(keymap_emacs, "Ctl-x u",  reset_search(reset_counter(reset_mark(undo))))
 
     # define_key(keymap_emacs, "Back",     reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_backward_char))))))
     define_key(keymap_emacs, "Delete",   reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_char))))))
     define_key(keymap_emacs, "C-Back",   reset_search(reset_undo(reset_counter(reset_mark(repeat3(backward_kill_word))))))
     define_key(keymap_emacs, "C-Delete", reset_search(reset_undo(reset_counter(reset_mark(repeat3(kill_word))))))
-    define_key(keymap_emacs, "C-c",      reset_search(reset_undo(reset_counter(reset_mark(kill_ring_save)))))
+    # define_key(keymap_emacs, "C-c",      reset_search(reset_undo(reset_counter(reset_mark(kill_ring_save)))))
     # define_key(keymap_emacs, "C-v",      reset_search(reset_undo(reset_counter(reset_mark(repeat(yank)))))) # scroll_key の設定で上書きされない場合
     # define_key(keymap_emacs, "C-z",      reset_search(reset_counter(reset_mark(undo))))
 
@@ -1428,30 +1432,29 @@ def configure(keymap):
         define_key(keymap_emacs, "C-S-2", reset_search(reset_undo(reset_counter(set_mark_command))))
 
     define_key(keymap_emacs, "C-Space",   reset_search(reset_undo(reset_counter(set_mark_command))))
-    define_key(keymap_emacs, "Ctl-x h",   reset_search(reset_undo(reset_counter(mark_whole_buffer))))
-    define_key(keymap_emacs, "M-a",       reset_search(reset_undo(reset_counter(mark_whole_buffer))))
-    define_key(keymap_emacs, "Ctl-x C-p", reset_search(reset_undo(reset_counter(mark_page))))
+    # define_key(keymap_emacs, "Ctl-x h",   reset_search(reset_undo(reset_counter(mark_whole_buffer))))
+    # define_key(keymap_emacs, "Ctl-x C-p", reset_search(reset_undo(reset_counter(mark_page))))
 
     ## 「バッファ / ウィンドウ操作」のキー設定
-    define_key(keymap_emacs, "Ctl-x k", reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
-    define_key(keymap_emacs, "Ctl-x b", reset_search(reset_undo(reset_counter(reset_mark(switch_to_buffer)))))
-    define_key(keymap_emacs, "Ctl-x o", reset_search(reset_undo(reset_counter(reset_mark(other_window)))))
-    define_key(keymap_emacs, "M-k",     reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
+    # define_key(keymap_emacs, "Ctl-x k", reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
+    # define_key(keymap_emacs, "Ctl-x b", reset_search(reset_undo(reset_counter(reset_mark(switch_to_buffer)))))
+    # define_key(keymap_emacs, "Ctl-x o", reset_search(reset_undo(reset_counter(reset_mark(other_window)))))
+    # define_key(keymap_emacs, "M-k",     reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
 
     ## 「文字列検索 / 置換」のキー設定
-    define_key(keymap_emacs, "C-r",   reset_undo(reset_counter(reset_mark(isearch_backward))))
-    define_key(keymap_emacs, "C-s",   reset_undo(reset_counter(reset_mark(isearch_forward))))
-    define_key(keymap_emacs, "M-S-5", reset_search(reset_undo(reset_counter(reset_mark(query_replace)))))
+    # define_key(keymap_emacs, "C-r",   reset_undo(reset_counter(reset_mark(isearch_backward))))
+    # define_key(keymap_emacs, "C-s",   reset_undo(reset_counter(reset_mark(isearch_forward))))
+    # define_key(keymap_emacs, "M-S-5", reset_search(reset_undo(reset_counter(reset_mark(query_replace)))))
 
     ## 「キーボードマクロ」のキー設定
-    if is_japanese_keyboard:
-        define_key(keymap_emacs, "Ctl-x S-8", kmacro_start_macro)
-        define_key(keymap_emacs, "Ctl-x S-9", kmacro_end_macro)
-    else:
-        define_key(keymap_emacs, "Ctl-x S-9", kmacro_start_macro)
-        define_key(keymap_emacs, "Ctl-x S-0", kmacro_end_macro)
+    # if is_japanese_keyboard:
+    #     define_key(keymap_emacs, "Ctl-x S-8", kmacro_start_macro)
+    #     define_key(keymap_emacs, "Ctl-x S-9", kmacro_end_macro)
+    # else:
+    #     define_key(keymap_emacs, "Ctl-x S-9", kmacro_start_macro)
+    #     define_key(keymap_emacs, "Ctl-x S-0", kmacro_end_macro)
 
-    define_key(keymap_emacs, "Ctl-x e", reset_search(reset_undo(reset_counter(repeat(kmacro_end_and_call_macro)))))
+    # define_key(keymap_emacs, "Ctl-x e", reset_search(reset_undo(reset_counter(repeat(kmacro_end_and_call_macro)))))
 
     ## 「その他」のキー設定
     define_key(keymap_emacs, "Enter",     reset_undo(reset_counter(reset_mark(repeat(newline)))))
@@ -1460,17 +1463,25 @@ def configure(keymap):
     define_key(keymap_emacs, "C-o",       reset_undo(reset_counter(reset_mark(repeat(open_line)))))
     define_key(keymap_emacs, "Tab",       reset_undo(reset_counter(reset_mark(repeat(indent_for_tab_command)))))
     define_key(keymap_emacs, "C-g",       reset_search(reset_counter(reset_mark(keyboard_quit))))
-    define_key(keymap_emacs, "Ctl-x C-c", reset_search(reset_undo(reset_counter(reset_mark(kill_emacs)))))
-    define_key(keymap_emacs, "M-S-1",     reset_search(reset_undo(reset_counter(reset_mark(shell_command)))))
+    # define_key(keymap_emacs, "Ctl-x C-c", reset_search(reset_undo(reset_counter(reset_mark(kill_emacs)))))
+    # define_key(keymap_emacs, "M-S-1",     reset_search(reset_undo(reset_counter(reset_mark(shell_command)))))
 
     if use_ctrl_i_as_tab:
         define_key(keymap_emacs, "C-i", reset_undo(reset_counter(reset_mark(repeat(indent_for_tab_command)))))
 
+    ## 「macOS」ライクのキー設定
+    define_key(keymap_emacs, "M-c", reset_search(reset_undo(reset_counter(reset_mark(kill_ring_save)))))
+    define_key(keymap_emacs, "M-x", reset_search(reset_undo(reset_counter(reset_mark(kill_region)))))
+    define_key(keymap_emacs, "M-v", reset_search(reset_undo(reset_counter(reset_mark(repeat(yank))))))
+    define_key(keymap_emacs, "M-s", reset_search(reset_undo(reset_counter(reset_mark(save_buffer)))))
+    define_key(keymap_emacs, "M-w", reset_search(reset_undo(reset_counter(reset_mark(kill_buffer)))))
+    define_key(keymap_emacs, "M-a", reset_search(reset_undo(reset_counter(mark_whole_buffer))))
+    define_key(keymap_emacs, "M-f", reset_undo(reset_counter(reset_mark(isearch_forward))))
+
     ## 「スクロール」のキー設定
     if scroll_key:
         define_key(keymap_emacs, scroll_key[0], reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
-        define_key(keymap_emacs, scroll_key[1], reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
-        define_key(keymap_emacs, scroll_key[2], reset_search(reset_undo(reset_counter(mark(scroll_down, True)))))
+        define_key(keymap_emacs, scroll_key[1], reset_search(reset_undo(reset_counter(mark(scroll_down, True)))))
 
     ## 「カット」のキー設定
     if ctl_x_prefix_key != "C-x":
@@ -1496,13 +1507,6 @@ def configure(keymap):
     if reconversion_key:
         for key in reconversion_key:
             define_key(keymap_emacs, key, reset_undo(reset_counter(reset_mark(reconversion(ime_reconv_key, ime_cancel_key)))))
-
-    ####################################################################################################
-    ## Visual Studioのキーバインド
-    ####################################################################################################
-    keymap_devenv = keymap.defineWindowKeymap( exe_name="devenv.exe")
-
-    keymap_devenv[ "C-h" ] = "Back"
 
     ####################################################################################################
     ## Emacs日本語入力モードの設定
@@ -1691,8 +1695,6 @@ def configure(keymap):
                 define_key(keymap_ei, scroll_key[0].replace("M-", "A-"), ei_record_func(scroll_up))
             if scroll_key[1]:
                 define_key(keymap_ei, scroll_key[1].replace("M-", "A-"), ei_record_func(scroll_down))
-            if scroll_key[2]:
-                define_key(keymap_ei, scroll_key[2].replace("M-", "A-"), ei_record_func(scroll_down))
 
         # 「IME のショートカットの置き換え」のキー設定
         if emacs_ime_mode_key:
@@ -1726,8 +1728,8 @@ def configure(keymap):
     ## ワンショットモディファイア
     ##################################################
 
-    keymap.replaceKey( "Enter", "LCtrl" )
-    keymap_global["O-LCtrl"] = "Enter"
+    keymap.replaceKey( "Enter", "RCtrl" )
+    keymap_global["O-RCtrl"] = "Enter"
 
     ##################################################
     ## キーバインド（ファンクション用）
@@ -2027,8 +2029,6 @@ def configure(keymap):
             define_key(keymap_lw, scroll_key[0].replace("M-", "A-"), scroll_up)
         if scroll_key[1]:
             define_key(keymap_lw, scroll_key[1].replace("M-", "A-"), scroll_down)
-        if scroll_key[2]:
-            define_key(keymap_lw, scroll_key[2].replace("M-", "A-"), scroll_down)
 
     ## 「カット / コピー / 削除 / アンドゥ」のキー設定
     define_key(keymap_lw, "C-h", delete_backward_char)
