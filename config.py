@@ -1728,7 +1728,8 @@ def configure(keymap):
     ##################################################
 
     keymap.replaceKey( "Enter", "RCtrl" )
-    keymap_global["O-RCtrl"] = "Enter"
+    for any in ("", "S-", "C-", "C-S-", "A-", "A-S-", "A-C-", "A-C-S-", "W-", "W-S-", "W-C-", "W-C-S-", "W-A-", "W-A-S-", "W-A-C-", "W-A-C-S-"):
+        keymap_global[any + "O-Rctrl"] = any + "Enter"
 
     ##################################################
     ## キーバインド（ファンクション用）
