@@ -2,7 +2,7 @@
 
 ##                               nickname: Fakeymacs
 ##
-## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200619_01
+## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）ver.20200622_01
 ##
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
@@ -191,44 +191,44 @@ def configure(keymap):
 
     # Emacs のキーバインドに“したくない”アプリケーションソフトを指定する
     # （Keyhac のメニューから「内部ログ」を ON にすると processname や classname を確認することができます）
-    not_emacs_target = ["bash.exe",               # WSL
-                        "ubuntu.exe",             # WSL
-                        "ubuntu1604.exe",         # WSL
-                        "ubuntu1804.exe",         # WSL
-                        "ubuntu2004.exe",         # WSL
-                        "debian.exe",             # WSL
-                        "kali.exe",               # WSL
-                        "SLES-12.exe",            # WSL
-                        "openSUSE-42.exe",        # WSL
-                        "openSUSE-Leap-15-1.exe", # WSL
-                        "mstsc.exe",              # Remote Desktop
-                        "WindowsTerminal.exe",    # Windows Terminal
-                        "mintty.exe",             # mintty
-                        "Cmder.exe",              # Cmder
-                        "ConEmu.exe",             # ConEmu
-                        "ConEmu64.exe",           # ConEmu
-                        "emacs.exe",              # Emacs
-                        "emacs-X11.exe",          # Emacs
-                        "emacs-w32.exe",          # Emacs
-                        "gvim.exe",               # GVim
-                        "Code.exe",               # VSCode
-                        "devenv.exe",             # Visual Studio
-                        "xyzzy.exe",              # xyzzy
-                        "VirtualBox.exe",         # VirtualBox
-                        "XWin.exe",               # Cygwin/X
-                        "XWin_MobaX.exe",         # MobaXterm/X
-                        "Xming.exe",              # Xming
-                        "vcxsrv.exe",             # VcXsrv
-                        "X410.exe",               # X410
-                        "putty.exe",              # PuTTY
-                        "ttermpro.exe",           # TeraTerm
-                        "MobaXterm.exe",          # MobaXterm
-                        "TurboVNC.exe",           # TurboVNC
-                        "vncviewer.exe",          # UltraVNC
-                        "vncviewer64.exe",        # UltraVNC
-                        "TeamViewer.exe",         # TeamViewer
-                        "Xpra-Launcher.exe",      # Xpra
-                       ]
+    not_emacs_target     = ["bash.exe",               # WSL
+                            "ubuntu.exe",             # WSL
+                            "ubuntu1604.exe",         # WSL
+                            "ubuntu1804.exe",         # WSL
+                            "ubuntu2004.exe",         # WSL
+                            "debian.exe",             # WSL
+                            "kali.exe",               # WSL
+                            "SLES-12.exe",            # WSL
+                            "openSUSE-42.exe",        # WSL
+                            "openSUSE-Leap-15-1.exe", # WSL
+                            "mstsc.exe",              # Remote Desktop
+                            "WindowsTerminal.exe",    # Windows Terminal
+                            "mintty.exe",             # mintty
+                            "Cmder.exe",              # Cmder
+                            "ConEmu.exe",             # ConEmu
+                            "ConEmu64.exe",           # ConEmu
+                            "emacs.exe",              # Emacs
+                            "emacs-X11.exe",          # Emacs
+                            "emacs-w32.exe",          # Emacs
+                            "gvim.exe",               # GVim
+                            "Code.exe",               # VSCode
+                            "devenv.exe",             # Visual Studio
+                            "xyzzy.exe",              # xyzzy
+                            "VirtualBox.exe",         # VirtualBox
+                            "XWin.exe",               # Cygwin/X
+                            "XWin_MobaX.exe",         # MobaXterm/X
+                            "Xming.exe",              # Xming
+                            "vcxsrv.exe",             # VcXsrv
+                            "X410.exe",               # X410
+                            "putty.exe",              # PuTTY
+                            "ttermpro.exe",           # TeraTerm
+                            "MobaXterm.exe",          # MobaXterm
+                            "TurboVNC.exe",           # TurboVNC
+                            "vncviewer.exe",          # UltraVNC
+                            "vncviewer64.exe",        # UltraVNC
+                            "TeamViewer.exe",         # TeamViewer
+                            "Xpra-Launcher.exe",      # Xpra
+                            ]
 
     # IME の切り替え“のみをしたい”アプリケーションソフトを指定する
     # （指定できるアプリケーションソフトは、not_emacs_target で（除外）指定したものからのみとなります）
@@ -323,9 +323,11 @@ def configure(keymap):
     # IME の「再変換」を行うキーを指定する
 
     ## IME の「再変換」のために利用するキーを設定する（複数指定可）
+    ## （Google日本語入力を利用する場合、Ctrl キーと組み合わせたキーを設定してください。「確定取り消し」
+    ##   が正常に動作しないアプリケーションソフト（Microsoft Excel、Sakura Editor など）があります。
+    ##   ただし、C-Back キーは設定しないでください。）
     reconversion_key = []
     # reconversion_key += ["C-t"]
-    # reconversion_key += ["C-Back"] # C-t を Chrome のショートカットキーとして使いたい場合の代替え案
     # reconversion_key += ["(28)"]   # [変換] キーを利用する場合でも、本機能を全て使うためには設定が必要
     # reconversion_key += ["O-RAlt"] # ワンショットモディファイアの指定も可能
 
@@ -334,10 +336,10 @@ def configure(keymap):
     ## Windows 10 1909 以前の Microsoft IME の場合
     ## （Windows 10 1909 以前の Microsoft IME の場合、C-t を押下して確定の取り消しの状態に入った後、
     ## 　Ctrl キーを押したままで C-n による選択メニューの移動を行おうとすると正常に動作しません。
-    ## 　一度 Ctrl キーを離す、メニューの移動に Space キーを利用する、reconversion_key に設定する
-    ## 　キーを Ctrl キーと組み合わせない、ime_cancel_key に "W-Slash" を設定して「再変換」の機能
-    ## 　として利用するなど、いくつかの回避方法があります。お試しください。）
+    ## 　一度 Ctrl キーを離す、メニューの移動に Space キーを利用する、ime_cancel_key に "W-Slash" を
+    ## 　設定して「再変換」の機能として利用するなど、いくつかの回避方法があります。お試しください。）
     if 1:
+        ime_type = "Microsoft"        
         ime_reconv_key = "W-Slash" # 「再変換」キー
         ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
         ime_reconv_region = False  # 「再変換」の時にリージョンの選択が必要かどうかを指定する
@@ -348,23 +350,17 @@ def configure(keymap):
     ## （新しい Microsoft IME には、確定取り消し（C-Backspace）の設定が無いようなので「再変換」のキー
     ## 　としている）
     if 0:
+        ime_type = "Microsoft"        
         ime_reconv_key = "W-Slash" # 「再変換」キー
         ime_cancel_key = "W-Slash" # 「確定の取り消し」キー
         ime_reconv_region = False  # 「再変換」の時にリージョンの選択が必要かどうかを指定する
         ime_reconv_space  = True   # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
                                    # どうかを指定する
 
-    ## Google日本語入力の「MS-IME」のキー設定の場合
+    ## Google日本語入力の場合
     if 0:
-        ime_reconv_key = "(28)"    # 「再変換」キー
-        ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
-        ime_reconv_region = True   # 「再変換」の時にリージョンの選択が必要かどうかを指定する
-        ime_reconv_space  = False  # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
-                                   # どうかを指定する
-
-    ## Google日本語入力の「ことえり」のキー設定の場合
-    if 0:
-        ime_reconv_key = "C-S-r"   # 「再変換」キー
+        ime_type = "Google"
+        ime_reconv_key = "W-Slash" # 「再変換」キー
         ime_cancel_key = "C-Back"  # 「確定の取り消し」キー
         ime_reconv_region = True   # 「再変換」の時にリージョンの選択が必要かどうかを指定する
         ime_reconv_space  = False  # リージョンを選択した状態で Space キーを押下した際、「再変換」が働くか
@@ -608,8 +604,6 @@ def configure(keymap):
             if fakeymacs.ime_cancel:
                 self_insert_command(cancel_key)()
                 if use_emacs_ime_mode:
-                    # バルーンメッセージのマークがずれて表示されないようにディレイを追加
-                    delay()
                     enable_emacs_ime_mode()
             else:
                 if ime_reconv_region:
@@ -687,7 +681,7 @@ def configure(keymap):
 
     def recenter():
         if (checkWindow("sakura.exe", "EditorClient") or # Sakura Editor
-            checkWindow("sakura.exe", "SakuraView166")): # Sakura Editor
+            checkWindow("sakura.exe", "SakuraView*")):   # Sakura Editor        
             self_insert_command("C-h")()
         else:
             # recenter の機能をサポートしていないアプリケーションソフトについては、C-l を発行する。
@@ -876,7 +870,7 @@ def configure(keymap):
 
     def query_replace():
         if (checkWindow("sakura.exe", "EditorClient") or  # Sakura Editor
-            checkWindow("sakura.exe", "SakuraView166") or # Sakura Editor
+            checkWindow("sakura.exe", "SakuraView*")  or  # Sakura Editor        
             checkWindow(None, "HM32CLIENT")):             # Hidemaru Software
             self_insert_command("C-r")()
         else:
@@ -1061,7 +1055,7 @@ def configure(keymap):
             elif keys_lists[0][0].startswith("M-"):
                 key = re.sub("^M-", "", keys_lists[0][0])
                 keys_lists[0][0] = "A-" + key
-                if  use_multi_stroke_open_bracket_as_esc:
+                if  use_multi_stroke_open_bracket_as_esc:                
                     keys_lists.append(["C-OpenBracket", key])
                 if use_esc_as_meta:
                     keys_lists.append(["Esc", key])
@@ -1371,31 +1365,31 @@ def configure(keymap):
     #     define_key(keymap_emacs, "C-S-a", reset_search(reset_undo(reset_counter(mark2(move_beginning_of_line, False)))))
     #     define_key(keymap_emacs, "C-S-e", reset_search(reset_undo(reset_counter(mark2(move_end_of_line, True)))))
 
-    # define_key(keymap_emacs, "Left",     reset_search(reset_undo(reset_counter(mark(repeat(backward_char), False)))))
-    # define_key(keymap_emacs, "Right",    reset_search(reset_undo(reset_counter(mark(repeat(forward_char), True)))))
-    # define_key(keymap_emacs, "C-Left",   reset_search(reset_undo(reset_counter(mark(repeat(backward_word), False)))))
-    # define_key(keymap_emacs, "C-Right",  reset_search(reset_undo(reset_counter(mark(repeat(forward_word), True)))))
-    # define_key(keymap_emacs, "Up",       reset_search(reset_undo(reset_counter(mark(repeat(previous_line), False)))))
-    # define_key(keymap_emacs, "Down",     reset_search(reset_undo(reset_counter(mark(repeat(next_line), True)))))
-    # define_key(keymap_emacs, "Home",     reset_search(reset_undo(reset_counter(mark(move_beginning_of_line, False)))))
-    # define_key(keymap_emacs, "End",      reset_search(reset_undo(reset_counter(mark(move_end_of_line, True)))))
-    # define_key(keymap_emacs, "C-Home",   reset_search(reset_undo(reset_counter(mark(beginning_of_buffer, False)))))
-    # define_key(keymap_emacs, "C-End",    reset_search(reset_undo(reset_counter(mark(end_of_buffer, True)))))
-    # define_key(keymap_emacs, "PageUP",   reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
-    # define_key(keymap_emacs, "PageDown", reset_search(reset_undo(reset_counter(mark(scroll_down, True)))))
+    define_key(keymap_emacs, "Left",     reset_search(reset_undo(reset_counter(mark(repeat(backward_char), False)))))
+    define_key(keymap_emacs, "Right",    reset_search(reset_undo(reset_counter(mark(repeat(forward_char), True)))))
+    define_key(keymap_emacs, "C-Left",   reset_search(reset_undo(reset_counter(mark(repeat(backward_word), False)))))
+    define_key(keymap_emacs, "C-Right",  reset_search(reset_undo(reset_counter(mark(repeat(forward_word), True)))))
+    define_key(keymap_emacs, "Up",       reset_search(reset_undo(reset_counter(mark(repeat(previous_line), False)))))
+    define_key(keymap_emacs, "Down",     reset_search(reset_undo(reset_counter(mark(repeat(next_line), True)))))
+    define_key(keymap_emacs, "Home",     reset_search(reset_undo(reset_counter(mark(move_beginning_of_line, False)))))
+    define_key(keymap_emacs, "End",      reset_search(reset_undo(reset_counter(mark(move_end_of_line, True)))))
+    define_key(keymap_emacs, "C-Home",   reset_search(reset_undo(reset_counter(mark(beginning_of_buffer, False)))))
+    define_key(keymap_emacs, "C-End",    reset_search(reset_undo(reset_counter(mark(end_of_buffer, True)))))
+    define_key(keymap_emacs, "PageUP",   reset_search(reset_undo(reset_counter(mark(scroll_up, False)))))
+    define_key(keymap_emacs, "PageDown", reset_search(reset_undo(reset_counter(mark(scroll_down, True)))))
 
-    # define_key(keymap_emacs, "S-Left",     reset_search(reset_undo(reset_counter(mark2(repeat(backward_char), False)))))
-    # define_key(keymap_emacs, "S-Right",    reset_search(reset_undo(reset_counter(mark2(repeat(forward_char), True)))))
-    # define_key(keymap_emacs, "C-S-Left",   reset_search(reset_undo(reset_counter(mark2(repeat(backward_word), False)))))
-    # define_key(keymap_emacs, "C-S-Right",  reset_search(reset_undo(reset_counter(mark2(repeat(forward_word), True)))))
-    # define_key(keymap_emacs, "S-Up",       reset_search(reset_undo(reset_counter(mark2(repeat(previous_line), False)))))
-    # define_key(keymap_emacs, "S-Down",     reset_search(reset_undo(reset_counter(mark2(repeat(next_line), True)))))
-    # define_key(keymap_emacs, "S-Home",     reset_search(reset_undo(reset_counter(mark2(move_beginning_of_line, False)))))
-    # define_key(keymap_emacs, "S-End",      reset_search(reset_undo(reset_counter(mark2(move_end_of_line, True)))))
-    # define_key(keymap_emacs, "C-S-Home",   reset_search(reset_undo(reset_counter(mark2(beginning_of_buffer, False)))))
-    # define_key(keymap_emacs, "C-S-End",    reset_search(reset_undo(reset_counter(mark2(end_of_buffer, True)))))
-    # define_key(keymap_emacs, "S-PageUP",   reset_search(reset_undo(reset_counter(mark2(scroll_up, False)))))
-    # define_key(keymap_emacs, "S-PageDown", reset_search(reset_undo(reset_counter(mark2(scroll_down, True)))))
+    define_key(keymap_emacs, "S-Left",     reset_search(reset_undo(reset_counter(mark2(repeat(backward_char), False)))))
+    define_key(keymap_emacs, "S-Right",    reset_search(reset_undo(reset_counter(mark2(repeat(forward_char), True)))))
+    define_key(keymap_emacs, "C-S-Left",   reset_search(reset_undo(reset_counter(mark2(repeat(backward_word), False)))))
+    define_key(keymap_emacs, "C-S-Right",  reset_search(reset_undo(reset_counter(mark2(repeat(forward_word), True)))))
+    define_key(keymap_emacs, "S-Up",       reset_search(reset_undo(reset_counter(mark2(repeat(previous_line), False)))))
+    define_key(keymap_emacs, "S-Down",     reset_search(reset_undo(reset_counter(mark2(repeat(next_line), True)))))
+    define_key(keymap_emacs, "S-Home",     reset_search(reset_undo(reset_counter(mark2(move_beginning_of_line, False)))))
+    define_key(keymap_emacs, "S-End",      reset_search(reset_undo(reset_counter(mark2(move_end_of_line, True)))))
+    define_key(keymap_emacs, "C-S-Home",   reset_search(reset_undo(reset_counter(mark2(beginning_of_buffer, False)))))
+    define_key(keymap_emacs, "C-S-End",    reset_search(reset_undo(reset_counter(mark2(end_of_buffer, True)))))
+    define_key(keymap_emacs, "S-PageUP",   reset_search(reset_undo(reset_counter(mark2(scroll_up, False)))))
+    define_key(keymap_emacs, "S-PageDown", reset_search(reset_undo(reset_counter(mark2(scroll_down, True)))))
 
     ## 「カット / コピー / 削除 / アンドゥ」のキー設定
     define_key(keymap_emacs, "C-h",      reset_search(reset_undo(reset_counter(reset_mark(repeat2(delete_backward_char))))))
@@ -1504,8 +1498,18 @@ def configure(keymap):
 
     ## 「再変換」、「確定取り消し」のキー設定
     if reconversion_key:
+        if ime_type == "Google":
+            # Google日本語入力を利用している時、ime_cancel_key に設定しているキーがキーバインドに
+            # 定義されていると、「確定取り消し」が正常に動作しない場合がある。このため、そのキー
+            # バインドの定義を削除する。
+            try:
+                del keymap_emacs[addSideOfModifierKey(ime_cancel_key)]
+            except:
+                pass
+
         for key in reconversion_key:
             define_key(keymap_emacs, key, reset_undo(reset_counter(reset_mark(reconversion(ime_reconv_key, ime_cancel_key)))))
+
 
     ####################################################################################################
     ## Emacs日本語入力モードの設定
@@ -1627,7 +1631,7 @@ def configure(keymap):
             if fakeymacs.is_playing_kmacro:
                 keymap.updateKeymap()
             else:
-                keymap.delayedCall(keymap.updateKeymap, 0)
+                keymap.delayedCall(keymap.updateKeymap, 100)
 
         ##################################################
         ## キーバインド（Emacs日本語入力モード用）
