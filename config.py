@@ -222,10 +222,10 @@ def configure(keymap):
     ####################################################################################################
 
     # IMEの設定（次の設定のいずれかを有効にする）
-    fc.ime = "old_Microsoft_IME"
+    # fc.ime = "old_Microsoft_IME"
     # fc.ime = "new_Microsoft_IME"
     # fc.ime = "Google_IME"
-    # fc.ime = None
+    fc.ime = None
 
     # 個人設定ファイルのセクション [section-options] を読み込んで実行する
     exec(readConfigPersonal("[section-options]"), dict(globals(), **locals()))
@@ -653,8 +653,8 @@ def configure(keymap):
             fakeymacs.keybind = "not_emacs"
             return False
         else:
-            if window != last_window:
-                popImeBalloon()
+            # if window != last_window:
+            #     popImeBalloon()
             fakeymacs.keybind = "emacs"
             return True
 
@@ -760,7 +760,7 @@ def configure(keymap):
             if fakeymacs.is_playing_kmacro:
                 delay(0.2)
 
-        popImeBalloon(ime_status)
+        # popImeBalloon(ime_status)
 
     def popImeBalloon(ime_status=None):
         if ime_status is None:
