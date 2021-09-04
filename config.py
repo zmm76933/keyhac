@@ -392,7 +392,7 @@ def configure(keymap):
     fc.set_input_method_key = []
 
     ## 日本語キーボードを利用している場合、<無変換> キーで英数入力、<変換> キーで日本語入力となる
-    fc.set_input_method_key += [["(29)", "(28)"]]
+    # fc.set_input_method_key += [["(29)", "(28)"]]
 
     ## 日本語キーボードを利用している場合、<Ａ> キーで英数入力、<あ> キーで日本語入力となる
     ## （https://docs.microsoft.com/ja-jp/windows-hardware/design/component-guidelines/keyboard-japan-ime）
@@ -1441,8 +1441,8 @@ def configure(keymap):
                 if re.match(key_list[0], r"O-LAlt$", re.IGNORECASE):
                     window_keymap["D-LAlt"] = "D-LAlt", "(7)"
 
-                if re.match(key_list[0], r"O-RAlt$", re.IGNORECASE):
-                    window_keymap["D-RAlt"] = "D-RAlt", "(7)"
+                # if re.match(key_list[0], r"O-RAlt$", re.IGNORECASE):
+                #     window_keymap["D-RAlt"] = "D-RAlt", "(7)"
             else:
                 w_keymap = window_keymap
                 for key in key_list[:-1]:
@@ -1645,8 +1645,6 @@ def configure(keymap):
     # define_key(keymap_emacs, "M-g M-", keymap.defineMultiStrokeKeymap("M-g Esc"))
     if  fc.use_multi_stroke_open_bracket_as_esc:
         define_key(keymap_emacs, "C-OpenBracket", keymap.defineMultiStrokeKeymap("C-OpenBracket"))
-    if fc.use_esc_as_meta:
-        define_key(keymap_emacs, "Esc", keymap.defineMultiStrokeKeymap("Esc"))
 
     ## 数字キーの設定
     # for n in range(10):
