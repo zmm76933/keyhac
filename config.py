@@ -5,7 +5,7 @@
 ## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）
 ##
 
-fakeymacs_version = "20210902_01"
+fakeymacs_version = "20210905_01"
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
 #   https://sites.google.com/site/craftware/keyhac-ja
@@ -253,7 +253,7 @@ def configure(keymap):
                                "SLES-12.exe",            # WSL
                                "openSUSE-42.exe",        # WSL
                                "openSUSE-Leap-15-1.exe", # WSL
-                               "mstsc.exe",              # Remote Desktop
+                               "mstsc.exe",              # Remote Desktop / WSLg
                                "WindowsTerminal.exe",    # Windows Terminal
                                "mintty.exe",             # mintty
                                "Cmder.exe",              # Cmder
@@ -357,8 +357,6 @@ def configure(keymap):
     # （True（Metaキーとして使う）に設定されている場合、ESC の二回押下で ESC が入力されます）
     fc.use_esc_as_meta = False
 
-    # C-[キーを MultiStrokeキーとして使うかどうかを指定する（True: 使う、False: 使わない）
-    fc.use_multi_stroke_open_bracket_as_esc = False
     # Ctl-xプレフィックスキーに使うキーを指定する
     # （Ctl-xプレフィックスキーのモディファイアキーは、Ctrl または Alt のいずれかから指定してください）
     fc.ctl_x_prefix_key = "C-x"
@@ -565,7 +563,8 @@ def configure(keymap):
     # fc.desktop_switching_key += [["W-Left", "W-Right"]]
 
     # アクティブウィンドウを仮想デスクトップ間で移動するキーの組み合わせ（前、後 の順）を指定する（複数指定可）
-    # （本機能を利用する場合は、Microsoft Store から SylphyHorn をインストールしてください）
+    # （本機能を利用する場合は、Microsoft Store から SylphyHorn をインストールしてください。
+    #   Windows 10 では動作を確認しておりますが、Windows 11 では正常に動作しないようです。）
     # （デフォルトキーは、["W-C-A-Left", "W-C-A-Right"] です。この設定は変更しないでください）
     # （仮想デスクトップ切り替え時の通知を ON にすると処理が重くなります。代わりに、トレイアイコンに
     #   デスクトップ番号を表示する機能を ON にすると良いようです。）
@@ -1338,7 +1337,6 @@ def configure(keymap):
         if keys:
             key_list0 = []
             key_list1 = []
-            key_list2 = []
             mata_flg  = False
 
             for key in keys.split():
@@ -1346,29 +1344,24 @@ def configure(keymap):
                     key = fc.ctl_x_prefix_key
 
                 if "M-" in key:
-                    key_list1.append("C-OpenBracket")
-                    key_list2.append("Esc")
+                    key_list1.append("Esc")
                     append_key = key.replace("M-", "")
                     if append_key:
                         key_list0.append(key.replace("M-", "A-"))
                         key_list1.append(append_key)
-                        key_list2.append(append_key)
                     else:
                         key_list0 = []
                     mata_flg = True
                 else:
                     key_list0.append(key)
                     key_list1.append(key)
-                    key_list2.append(key)
 
             if key_list0:
                 key_lists.append(key_list0)
 
             if mata_flg:
-                if  fc.use_multi_stroke_open_bracket_as_esc:
-                    key_lists.append(key_list1)
                 if fc.use_esc_as_meta:
-                    key_lists.append(key_list2)
+                    key_lists.append(key_list1)
 
             for key_list in key_lists:
                 key_list[0] = addSideOfModifierKey(key_list[0])
@@ -1438,8 +1431,8 @@ def configure(keymap):
 
                 # Alt キーを単押しした際に、カーソルがメニューへ移動しないようにする
                 # （https://www.haijin-boys.com/discussions/4583）
-                if re.match(key_list[0], r"O-LAlt$", re.IGNORECASE):
-                    window_keymap["D-LAlt"] = "D-LAlt", "(7)"
+                # if re.match(key_list[0], r"O-LAlt$", re.IGNORECASE):
+                #     window_keymap["D-LAlt"] = "D-LAlt", "(7)"
 
                 # if re.match(key_list[0], r"O-RAlt$", re.IGNORECASE):
                 #     window_keymap["D-RAlt"] = "D-RAlt", "(7)"
@@ -1451,6 +1444,20 @@ def configure(keymap):
 
     def define_key2(window_keymap, keys, command):
         define_key(window_keymap, keys, command, skip_check=False)
+
+    def define_key3(window_keymap, keys, command, check_func):
+        define_key(window_keymap, keys, makeKeyCommand(window_keymap, keys, command, check_func))
+
+    def getKeyCommand(window_keymap, keys):
+        try:
+            key_list = kbd(keys)[-1]
+            for key in key_list:
+                window_keymap = window_keymap[key]
+            func = window_keymap
+        except:
+            func = None
+
+        return func
 
     def makeKeyCommand(window_keymap, keys, command, check_func):
         func = getKeyCommand(window_keymap, keys)
@@ -1467,17 +1474,6 @@ def configure(keymap):
             else:
                 func()
         return _func
-
-    def getKeyCommand(window_keymap, keys):
-        try:
-            key_list = kbd(keys)[-1]
-            for key in key_list:
-                window_keymap = window_keymap[key]
-            func = window_keymap
-        except:
-            func = None
-
-        return func
 
     def self_insert_command(*keys):
         func = keymap.InputKeyCommand(*list(map(addSideOfModifierKey, keys)))
@@ -1643,8 +1639,6 @@ def configure(keymap):
     # define_key(keymap_emacs, "M-",     keymap.defineMultiStrokeKeymap("Esc"))
     # define_key(keymap_emacs, "M-g",    keymap.defineMultiStrokeKeymap("M-g"))
     # define_key(keymap_emacs, "M-g M-", keymap.defineMultiStrokeKeymap("M-g Esc"))
-    if  fc.use_multi_stroke_open_bracket_as_esc:
-        define_key(keymap_emacs, "C-OpenBracket", keymap.defineMultiStrokeKeymap("C-OpenBracket"))
 
     ## 数字キーの設定
     # for n in range(10):
@@ -1659,7 +1653,7 @@ def configure(keymap):
 
     ## アルファベットキーの設定
     # for vkey in range(VK_A, VK_Z + 1):
-    #     key = "({})".format(vkey)
+    #     key = vkToStr(vkey)
     #     define_key(keymap_emacs,        key, reset_undo(reset_counter(reset_mark(repeat(self_insert_command2(       key))))))
     #     define_key(keymap_emacs, "S-" + key, reset_undo(reset_counter(reset_mark(repeat(self_insert_command2("S-" + key))))))
     #     define_key(keymap_ime,          key, self_insert_command2(       key))
@@ -1670,21 +1664,21 @@ def configure(keymap):
     # define_key(keymap_emacs, "S-Space", reset_undo(reset_counter(reset_mark(repeat(self_insert_command("S-Space"))))))
 
     # for vkey in [VK_OEM_MINUS, VK_OEM_PLUS, VK_OEM_COMMA, VK_OEM_PERIOD, VK_OEM_1, VK_OEM_2, VK_OEM_3, VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_102]:
-    #     key = "({})".format(vkey)
+    #     key = vkToStr(vkey)
     #     define_key(keymap_emacs,        key, reset_undo(reset_counter(reset_mark(repeat(self_insert_command2(       key))))))
     #     define_key(keymap_emacs, "S-" + key, reset_undo(reset_counter(reset_mark(repeat(self_insert_command2("S-" + key))))))
     #     define_key(keymap_ime,          key, self_insert_command2(       key))
     #     define_key(keymap_ime,   "S-" + key, self_insert_command2("S-" + key))
 
     ## 10key の特殊文字キーの設定
-    # jfor vkey in [VK_MULTIPLY, VK_ADD, VK_SUBTRACT, VK_DECIMAL, VK_DIVIDE]:
-    #     key = "({})".format(vkey)
+    # for vkey in [VK_MULTIPLY, VK_ADD, VK_SUBTRACT, VK_DECIMAL, VK_DIVIDE]:
+    #     key = vkToStr(vkey)
     #     define_key(keymap_emacs, key, reset_undo(reset_counter(reset_mark(repeat(self_insert_command2(key))))))
     #     define_key(keymap_ime,   key, self_insert_command2(key))
 
     ## quoted-insertキーの設定
     # for vkey in vkeys():
-    #     key = "({})".format(vkey)
+    #     key = vkToStr(vkey)
     #     for mod1 in ["", "W-"]:
     #         for mod2 in ["", "A-"]:
     #             for mod3 in ["", "C-"]:
@@ -1693,10 +1687,7 @@ def configure(keymap):
     #                     define_key(keymap_emacs, "C-q " + mkey, self_insert_command(mkey))
 
     ## Escキーの設定
-    if fc.use_multi_stroke_open_bracket_as_esc:
-        define_key(keymap_emacs, "C-OpenBracket C-OpenBracket", reset_undo(reset_counter(self_insert_command("Esc"))))
-    else:
-        define_key(keymap_emacs, "C-OpenBracket", reset_undo(reset_counter(self_insert_command("Esc"))))
+    define_key(keymap_emacs, "C-OpenBracket", reset_undo(reset_counter(self_insert_command("Esc"))))
     if fc.use_esc_as_meta:
         define_key(keymap_emacs, "Esc Esc", reset_undo(reset_counter(self_insert_command("Esc"))))
     else:
@@ -2096,9 +2087,9 @@ def configure(keymap):
     ## ワンショットモディファイア
     ##################################################
 
-    keymap.replaceKey( "Enter", "RCtrl" )
-    for any_key in ("", "S-", "C-", "C-S-", "A-", "A-S-", "A-C-", "A-C-S-", "W-", "W-S-", "W-C-", "W-C-S-", "W-A-", "W-A-S-", "W-A-C-", "W-A-C-S-"):
-        keymap_global[any_key + "O-Rctrl"] = any_key + "Enter"
+    keymap.replaceKey("Enter", "RCtrl")
+    keymap_global["O-RCtrl"] = "Enter"
+    keymap_global["O-LCtrl"] = "Escape"
 
     ###########################################################################
     ## ファンクションキーの設定
