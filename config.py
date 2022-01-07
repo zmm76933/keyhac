@@ -5,14 +5,10 @@
 ## Windows の操作を Emacs のキーバインドで行うための設定（Keyhac版）
 ##
 
-fakeymacs_version = "20211007_01"
+fakeymacs_version = "20220105_01"
 
 # このスクリプトは、Keyhac for Windows ver 1.82 以降で動作します。
 #   https://sites.google.com/site/craftware/keyhac-ja
-# スクリプトですので、使いやすいようにカスタマイズしてご利用ください。
-#
-# この内容は、utf-8-with-signature-dos の coding-system で config.py の名前でセーブして
-# 利用してください。
 #
 # 本設定を利用するための仕様は、以下を参照してください。
 #
@@ -142,6 +138,7 @@ import copy
 import types
 import datetime
 import ctypes
+import pyauto
 
 import keyhac_keymap
 from keyhac import *
@@ -267,7 +264,7 @@ def configure(keymap):
                                "SLES-12.exe",            # WSL
                                "openSUSE-42.exe",        # WSL
                                "openSUSE-Leap-15-1.exe", # WSL
-                               "mstsc.exe",              # Remote Desktop / WSLg
+                               "mstsc.exe",              # Remote Desktop
                                "WindowsTerminal.exe",    # Windows Terminal
                                "mintty.exe",             # mintty
                                "Cmder.exe",              # Cmder
@@ -281,6 +278,7 @@ def configure(keymap):
                                "devenv.exe",             # Visual Studio
                                "xyzzy.exe",              # xyzzy
                                "VirtualBox.exe",         # VirtualBox
+                               "msrdc.exe",              # WSLg
                                "XWin.exe",               # Cygwin/X
                                "XWin_MobaX.exe",         # MobaXterm/X
                                "XWin_MobaX_1.16.3.exe",  # MobaXterm/X
@@ -397,7 +395,7 @@ def configure(keymap):
 
     # IME をトグルで切り替えるキーを指定する（複数指定可）
     fc.toggle_input_method_key = []
-    fc.toggle_input_method_key += ["C-Yen"]
+    # fc.toggle_input_method_key += ["C-Yen"]
     # fc.toggle_input_method_key += ["C-o"]
     # fc.toggle_input_method_key += ["O-LAlt"]
 
@@ -571,6 +569,10 @@ def configure(keymap):
     fc.window_minimize_key = []
     # fc.window_minimize_key += [["A-S-m", "A-m"]]
 
+    # ウィンドウのリストアが最小化した順番の逆順とならない場合の対策を行うかを指定する
+    # （True: 対策有、False: 対策無）
+    fc.reverse_window_to_restore = False
+
     # 仮想デスクトップを切り替えるキーの組み合わせ（前、後 の順）を指定する（複数指定可）
     # （仮想デスクトップを切り替えた際にフォーカスのあるウィンドウを適切に処理するため、設定するキーは
     #   Winキーとの組み合わせとしてください）
@@ -698,6 +700,14 @@ def configure(keymap):
     else:
         keymap_emacs = keymap.defineWindowKeymap(check_func=is_emacs_target)
         keymap_ime   = keymap.defineWindowKeymap(check_func=is_ime_target)
+
+    # Microsoft Word 等で Ctrl に反応してサブウインドウが開き、そのサブウインドウに
+    # カーソルが移動するのを抑制するための対策
+    if fc.side_of_ctrl_key == "L":
+        keymap_emacs["D-LCtrl"] = "D-LCtrl", "(255)"
+
+    elif fc.side_of_ctrl_key == "R":
+        keymap_emacs["D-RCtrl"] = "D-RCtrl", "(255)"
 
     # mark がセットされると True になる
     fakeymacs.is_marked = False
@@ -1185,6 +1195,9 @@ def configure(keymap):
     ## その他
     ##################################################
 
+    def escape():
+        self_insert_command("Esc")()
+
     def space():
         self_insert_command("Space")()
         if fc.use_emacs_ime_mode:
@@ -1217,7 +1230,7 @@ def configure(keymap):
                     checkWindow("powershell.exe", "ConsoleWindowClass") or # PowerShell
                     checkWindow("EXCEL.EXE", "EXCEL*") or                  # Microsoft Excel
                     checkWindow("Evernote.exe", "WebViewHost")):           # Evernote
-                self_insert_command("Esc")()
+                escape()
 
         keymap.command_RecordStop()
 
@@ -1251,17 +1264,11 @@ def configure(keymap):
             fakeymacs.is_digit_argument = True
 
     def shell_command():
-        def popCommandWindow(wnd, command):
-            if wnd.isVisible() and not wnd.getOwner() and wnd.getProcessName() == command:
-                popWindow(wnd)()
-                fakeymacs.is_executing_command = True
-                return False
-            return True
+        for window in getWindowList():
+            if window.getProcessName() in os.path.basename(fc.command_name):
+                popWindow(window)()
+                return
 
-        fakeymacs.is_executing_command = False
-        Window.enum(popCommandWindow, os.path.basename(fc.command_name))
-
-        if not fakeymacs.is_executing_command:
             keymap.ShellExecuteCommand(None, fc.command_name, "", "")()
 
     ##################################################
@@ -1431,7 +1438,7 @@ def configure(keymap):
                     def _command():
                         fakeymacs.update_last_keys = True
                         if ckey in fakeymacs.exclution_key:
-                            keymap.InputKeyCommand(key)()
+                            InputKeyCommand(key)()
                         else:
                             command()
                         if fakeymacs.update_last_keys:
@@ -1451,13 +1458,13 @@ def configure(keymap):
             if len(key_list) == 1:
                 window_keymap[key_list[0]] = keyCommand(key_list[0])
 
-                # Alt キーを単押しした際に、カーソルがメニューへ移動しないようにする
+                # Alt キーを単押しした際に、カーソルがメニューへ移動しないようにするための対策
                 # （https://www.haijin-boys.com/discussions/4583）
-                if key_list[0] == "O-LAlt":
-                    window_keymap["D-LAlt"] = "D-LAlt", "(7)"
+                if re.match(r"O-LAlt$", key_list[0], re.IGNORECASE):
+                    window_keymap["D-LAlt"] = "D-LAlt", "(255)"
 
-                elif key_list[0] == "O-RAlt":
-                    window_keymap["D-RAlt"] = "D-RAlt", "(7)"
+                elif re.match(r"O-RAlt$", key_list[0], re.IGNORECASE):
+                    window_keymap["D-RAlt"] = "D-RAlt", "(255)"
             else:
                 w_keymap = window_keymap
                 for key in key_list[:-1]:
@@ -1471,11 +1478,14 @@ def configure(keymap):
         define_key(window_keymap, keys, makeKeyCommand(window_keymap, keys, command, check_func))
 
     def mergeMultiStrokeKeymap(window_keymap1, window_keymap2, keys):
-        key_list = kbd(keys)[0]
-        for key in key_list:
-            window_keymap1 = window_keymap1[key]
-            window_keymap2 = window_keymap2[key]
-        window_keymap1.keymap = {**window_keymap2.keymap, **window_keymap1.keymap}
+        try:
+            key_list = kbd(keys)[0]
+            for key in key_list:
+                window_keymap1 = window_keymap1[key]
+                window_keymap2 = window_keymap2[key]
+            window_keymap1.keymap = {**window_keymap2.keymap, **window_keymap1.keymap}
+        except:
+            pass
 
     def getKeyCommand(window_keymap, keys):
         try:
@@ -1493,7 +1503,7 @@ def configure(keymap):
         if func is None:
             key_list = kbd(keys)[0]
             if len(key_list) == 1:
-                func = keymap.InputKeyCommand(key_list[0])
+                func = InputKeyCommand(key_list[0])
             else:
                 func = lambda: None
 
@@ -1504,8 +1514,18 @@ def configure(keymap):
                 func()
         return _func
 
+    def InputKeyCommand(*keys):
+        def _func():
+            keymap.InputKeyCommand(*keys)()
+            # Microsoft Word 等で Ctrl に反応してサブウインドウが開き、そのサブウインドウに
+            # カーソルが移動するのを抑制するための対策
+            if keyhac_keymap.checkModifier(keymap.modifier, MODKEY_CTRL):
+                if not re.search(r"C-", keys[-1]):
+                    pyauto.Input.send([pyauto.Key(strToVk("(255)"))])
+        return _func
+
     def self_insert_command(*keys):
-        func = keymap.InputKeyCommand(*list(map(addSideOfModifierKey, keys)))
+        func = InputKeyCommand(*list(map(addSideOfModifierKey, keys)))
         def _func():
             func()
             fakeymacs.ime_cancel = False
@@ -1544,8 +1564,8 @@ def configure(keymap):
 
     def mark(func, forward_direction):
         # M-< や M-> 押下時に D-Shift が解除されないようにする対策
-        func_d_shift = self_insert_command("D-LShift")
-        func_u_shift = self_insert_command("U-LShift")
+        func_d_shift = self_insert_command("D-LShift", "D-RShift")
+        func_u_shift = self_insert_command("U-LShift", "U-RShift")
         def _func():
             if fakeymacs.is_marked:
                 func_d_shift()
@@ -1934,6 +1954,14 @@ def configure(keymap):
 
         keymap_ei = keymap.defineWindowKeymap(check_func=is_emacs_ime_mode2)
 
+        # Microsoft Word 等で Ctrl に反応してサブウインドウが開き、そのサブウインドウに
+        # カーソルが移動するのを抑制するための対策
+        if fc.side_of_ctrl_key == "L":
+            keymap_ei["D-LCtrl"] = "D-LCtrl", "(255)"
+
+        elif fc.side_of_ctrl_key == "R":
+            keymap_ei["D-RCtrl"] = "D-RCtrl", "(255)"
+
         # Emacs日本語入力モードが開始されたときのウィンドウオブジェクトを格納する変数を初期化する
         fakeymacs.ei_last_window = None
 
@@ -2000,7 +2028,7 @@ def configure(keymap):
         ##################################################
 
         def ei_esc():
-            self_insert_command("Esc")()
+            escape()
 
         def ei_newline():
             self_insert_command("Enter")()
@@ -2008,7 +2036,7 @@ def configure(keymap):
             disable_emacs_ime_mode()
 
         def ei_keyboard_quit():
-            self_insert_command("Esc")()
+            escape()
             disable_emacs_ime_mode()
 
         ##################################################
@@ -2094,8 +2122,10 @@ def configure(keymap):
 
         ## 「IME の切り替え」のキー設定
         for disable_key, enable_key in fc.set_input_method_key:
-            define_key(keymap_ei, disable_key, ei_disable_input_method2(keymap_ei_dup, disable_key))
-            define_key(keymap_ei, enable_key,  ei_enable_input_method2(keymap_ei_dup, enable_key))
+            if disable_key:
+                define_key(keymap_ei, disable_key, ei_disable_input_method2(keymap_ei_dup, disable_key))
+            if enable_key:
+                define_key(keymap_ei, enable_key,  ei_enable_input_method2(keymap_ei_dup, enable_key))
 
 
     ###########################################################################
@@ -2167,7 +2197,10 @@ def configure(keymap):
             try:
                 if wnd.isMinimized():
                     wnd.restore()
-                delay() # ウィンドウフォーカスが適切に移動しない場合があることの対策
+
+                # ウィンドウフォーカスが適切に移動しない場合があることの対策
+                self_insert_command("Shift")() # 何かのキーを押下すると良いようだ
+
                 wnd.getLastActivePopup().setForeground()
             except:
                 print("選択したウィンドウは存在しませんでした")
@@ -2226,9 +2259,8 @@ def configure(keymap):
     def restore_window():
         window_list = getWindowList()
 
-        # ウィンドウのリストアが最小化した順番の逆順にならないときは次の行を無効化
-        # （コメント化）してください
-        window_list.reverse()
+        if not fc.reverse_window_to_restore:
+            window_list.reverse()
 
         for wnd in window_list:
             if wnd.isMinimized():
@@ -2308,13 +2340,15 @@ def configure(keymap):
     define_key(keymap_tsw, "A-f", self_insert_command("A-Right"))
     define_key(keymap_tsw, "A-p", self_insert_command("A-Up"))
     define_key(keymap_tsw, "A-n", self_insert_command("A-Down"))
+    define_key(keymap_tsw, "A-d", self_insert_command("A-Delete"))
     define_key(keymap_tsw, "A-g", self_insert_command("A-Esc"))
 
     define_key(keymap_tsw, "C-b", backward_char)
     define_key(keymap_tsw, "C-f", forward_char)
     define_key(keymap_tsw, "C-p", previous_line)
     define_key(keymap_tsw, "C-n", next_line)
-    define_key(keymap_tsw, "C-g", self_insert_command("Esc"))
+    define_key(keymap_tsw, "C-d", delete_char)
+    define_key(keymap_tsw, "C-g", escape)
 
 
     ###########################################################################
@@ -2369,7 +2403,7 @@ def configure(keymap):
     ##################################################
 
     def lw_keyboard_quit():
-        self_insert_command("Esc")()
+        escape()
 
     ##################################################
     ## 共通関数（リストウィンドウ用）
@@ -2399,8 +2433,8 @@ def configure(keymap):
     ##################################################
 
     ## Escキーの設定
-    define_key(keymap_lw, "Esc",           lw_reset_search(self_insert_command("Esc")))
-    define_key(keymap_lw, "C-OpenBracket", lw_reset_search(self_insert_command("Esc")))
+    define_key(keymap_lw, "Esc",           lw_reset_search(escape))
+    define_key(keymap_lw, "C-OpenBracket", lw_reset_search(escape))
 
     ## 「カーソル移動」のキー設定
     define_key(keymap_lw, "C-b", backward_char)
