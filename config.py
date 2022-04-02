@@ -1564,8 +1564,8 @@ def configure(keymap):
 
     def mark(func, forward_direction):
         # M-< や M-> 押下時に D-Shift が解除されないようにする対策
-        func_d_shift = self_insert_command("D-LShift", "D-RShift")
-        func_u_shift = self_insert_command("U-LShift", "U-RShift")
+        func_d_shift = self_insert_command("D-LShift")
+        func_u_shift = self_insert_command("U-LShift")
         def _func():
             if fakeymacs.is_marked:
                 func_d_shift()
@@ -2150,10 +2150,10 @@ def configure(keymap):
     ## ワンショットモディファイア
     ##################################################
 
-    keymap.replaceKey("Enter", "RCtrl")
-    for any_key in ("", "S-", "C-", "C-S-", "A-", "A-S-", "A-C-", "A-C-S-", "W-", "W-S-", "W-C-", "W-C-S-", "W-A-", "W-A-S-", "W-A-C-", "W-A-C-S-"):
-        keymap_global[any_key + "O-RCtrl"] = any_key + "Enter"
-    keymap_global["O-LCtrl"] = "Escape"
+    # keymap.replaceKey("Enter", "RCtrl")
+    # for any_key in ("", "S-", "C-", "C-S-", "A-", "A-S-", "A-C-", "A-C-S-", "W-", "W-S-", "W-C-", "W-C-S-", "W-A-", "W-A-S-", "W-A-C-", "W-A-C-S-"):
+    #     keymap_global[any_key + "O-RCtrl"] = any_key + "Enter"
+    # keymap_global["O-LCtrl"] = "Escape"
 
     ###########################################################################
     ## ファンクションキーの設定
